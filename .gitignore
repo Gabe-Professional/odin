@@ -2,3 +2,4 @@
 odin.egg-info
 odin/collect/__pycache__/
 odin/__pycache__/cli.cpython-39.pyc
+*/*/__pycache__/
