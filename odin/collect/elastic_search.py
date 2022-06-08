@@ -37,35 +37,10 @@ def make_api_call(creds: dict, query_file_path, index_pattern: str):
     params = query
 
     # res = req.get(url=ep, data=query, auth=(un, pw), headers=headers)
-    results = es.search(index=index_pattern, body=params, size=100000)
+    results = es.search(index=index_pattern, body=params, size=10000)
     data = results['hits']['hits'][:]
-
-    tmp = {'uid': [],
-           'timestamp': [],
-           'author': [],
-           'body': [],
-           'domain': []
-           }
-
-    # print(data[0]['_source']['norm']['domain'])
-    # exit()
-
-    for res in data:
-        uid = res['_source']['uid']
-        auth = res['_source']['norm']['author']
-        txt = res['_source']['norm']['body']
-        ts = res['_source']['norm']['timestamp']
-        dom = res['_source']['norm']['domain']
-
-        tmp['uid'].append(uid)
-        tmp['timestamp'].append(ts)
-        tmp['author'].append(auth)
-        tmp['body'].append(txt)
-        tmp['domain'].append(dom)
-
-    pd.set_option('display.max_columns', None)
-    df = pd.DataFrame(tmp)
-    print(df)
+    print(data[0]['_source'].keys())
+    return data
 # def search(uri, term):
 #     query = json.dumps({
 #         "query": {

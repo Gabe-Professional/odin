@@ -25,7 +25,7 @@ def setup_parser():
     collect_parser.set_defaults(func=collect_main)
 
     # --------------------------------------------------------------------------------------------------------------- #
-    #### ADD ANOTHER SUBPARSER HERE WHEN A NEW FUCTION OF ODIN IS NEEDED
+    #### ADD ANOTHER SUBPARSER HERE WHEN A NEW FUNCTION OF ODIN IS NEEDED
     # --------------------------------------------------------------------------------------------------------------- #
     #
     #

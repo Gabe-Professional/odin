@@ -1,0 +1,49 @@
+{
+  "query": {
+    "bool": {
+      "must": [],
+      "filter": [
+        {
+          "match_all": {}
+        },
+       {          "bool": {
+            "must": [
+              {
+                "query_string": {
+                  "query": "norm.body:(\"arrest\" OR \"يقبض على\" OR \"دستگیری\" OR \"арест\" OR \"arrestar\" OR \"逮捕\" OR \"체포\" OR \"aresto\" OR \"xirid\" OR \"Kukamatwa\" OR \"prender prisão\" OR \"arrestted\" OR \"ithestted\" OR \"دستگیر شده\" OR \"арестовать\" OR \"arrestado\" OR \"被捕\" OR \"체포\" OR \"ari-arian\" OR \"Xiritaanka\" OR \"alikamatwa\" OR \"Prendido\" OR \"arrestting\" OR \"etresting.\" OR \"دستگیر\" OR \"арест\" OR \"arresto\" OR \"逮捕\" OR \"탈착\" OR \"pag-aresto\" OR \"habeynta\" OR \"Kufunga\" OR \"prender\" OR \"kill\" OR \"قتل\" OR \"کشتن\" OR \"убийство\" OR \"matar\" OR \"杀\" OR \"죽임\" OR \"Patayin\" OR \"dilid\" OR \"Kuua\" OR \"matar\" OR \"killed\" OR \"قتل\" OR \"کشته شده\" OR \"погибший\" OR \"delicado\" OR \"丧生\" OR \"죽었다\" OR \"pinatay\" OR \"lalin\" OR \"aliuawa\" OR \"morto\" OR \"bombed\" OR \"قصفت\" OR \"بمب گذاری شده\" OR \"бомбардировать\" OR \"bombardeado\" OR \"轰炸\" OR \"폭격 당하고있다\" OR \"bombed\" OR \"qarax\" OR \"Bomu\" OR \"bombardeado\" OR \"destroyed\" OR \"دمرت\" OR \"نابود\" OR \"уничтожен\" OR \"destruido\" OR \"摧毁\" OR \"파괴됨\" OR \"nawasak\" OR \"burburiyey\" OR \"kuharibiwa\" OR \"destruído\" OR \"captured\" OR \"القبض على\" OR \"اسیر\" OR \"захваченный\" OR \"capturado\" OR \"捕获\" OR \"캡처 한\" OR \"nakuha\" OR \"la qabsansho\" OR \"alitekwa.\" OR \"capturado\" OR \"in custody\" OR \"قيد التوقيف\" OR \"در بازداشت\" OR \"под стражей\" OR \"en custodia\" OR \"拘留所\" OR \"구금\" OR \"sa pag-iingat\" OR \"Ilaalinta\" OR \"chini ya ulinzi\" OR \"em custódia\" OR \"detained\" OR \"محتجز\" OR \"بازداشت شده\" OR \"задержан\" OR \"detenido\" OR \"拘留\" OR \"억류 된\" OR \"pinigil\" OR \"la xiray\" OR \"kizuizini\" OR \"detido\" OR \"caught\" OR \"القبض\" OR \"گرفتار\" OR \"пойманный\" OR \"atrapó\" OR \"抓住\" OR \"잡았다\" OR \"nahuli\" OR \"la qabtay\" OR \"Uliopata\" OR \"apanhado\" OR \"jail\" OR \"سجن\" OR \"زندان\" OR \"тюрьма\" OR \"celda\" OR \"监狱\" OR \"교도소\" OR \"bilangguan\" OR \"xabsi\" OR \"jela\" OR \"cadeia\" OR \"dead\" OR \"في ذمة الله تعالى\" OR \"مرده\" OR \"мертвых\" OR \"muerto\" OR \"死的\" OR \"죽은\" OR \"patay\" OR \"dhintay\" OR \"wafu.\" OR \"morta\" OR \"deceased\" OR \"فقيد\" OR \"فوت شده\" OR \"покойный\" OR \"fallecido\" OR \"死者\" OR \"고인\" OR \"namatay\" OR \"dhintay\" OR \"amekufa\" OR \"morto\" OR \"shot\" OR \"اطلاق النار\" OR \"شات\" OR \"выстрелил\" OR \"Disparo\" OR \"射击\" OR \"사격\" OR \"Shot.\" OR \"toogashada\" OR \"Shot.\" OR \"tomada\" OR \"murdered\" OR \"قتل\" OR \"کشته شده\" OR \"убивать\" OR \"asesinado\" OR \"murder\" OR \"살해 된 것\" OR \"pinatay\" OR \"la dilay\" OR \"aliuawa\" OR \"assassinado\")",
+                  "analyze_wildcard": true,
+                  "time_zone": "America/New_York"
+                }
+              }
+            ],
+            "should": [],
+            "must_not": []
+          }
+        },
+        {
+          "bool": {
+            "must": [
+              {
+                "query_string": {
+                  "query": "norm.body:(\" William Higgins\" OR \"Abd al-Rahman al-Maghrebi\" OR \"Abdelbasit Alhaj Alhassan Haj Hamad\" OR \"Abdelkarim Hussein Mohamed al-Nasser\" OR \"Abdelrahman Abbas Rahama\" OR \"Abdelraouf Abu Zaid Mohamed Hamza\" OR \"Abderraouf Ben Habib Jdey\" OR \"Abdikadir Mohamed Abdikadir\" OR \"Abdikadir Mumin\" OR \"Abdiqadir Mu'min\" OR \"Abdolreza Rahmani Fazli\" OR \"Abdul Rahman Yasin\" OR \"Abdul Reza Shahla'i\" OR \"Abdul Saboor\" OR \"Abdul Wali\" OR \"Abdul Zakir\" OR \"Abdulbari al-Kotf\" OR \"Abdullah Ahmed Abdullah\" OR \"Abdullah Nowbahar\" OR \"Abdullahi Osman Mohamed\" OR \"Abdullahi Yare\" OR \"Abu 'Abd al-Karim al-Masri\" OR \"Abu Huzeifa\" OR \"Abu Mus'ab Al-Barnawi\" OR \"Abu Oubeïda Youssouf Al Annabi\" OR \"Abu Ubaidah (Direye)\" OR \"Abu Ubaydah Yusuf al-Anabi\" OR \"Abu-Muhammad al-Shimali\" OR \"Abu-Yusuf al-Muhajir\" OR \"Abubakar Shekau\" OR \"Abukar Ali Adan\" OR \"Adham Husayn Tabaja\" OR \"Adnan Abu Walid al-Sahrawi\" OR \"Adnan Hussein Kawtharani\" OR \"Ahadon Adak\" OR \"Ahlam Ahmad al-Tamimi\" OR \"Ahmad Ibrahim al-Mughassil\" OR \"Ahmed Iman Ali\" OR \"Al Mahmoud Ag Baye\" OR \"al-Shabaab\" OR \"Al-Shabaab's Financial Mechanisms\" OR \"Ali al-Sha'ir\" OR \"Ali Atwa\" OR \"Ali Gholam Shakuri\" OR \"Ali Mohamud Rage\" OR \"Ali Qasir\" OR \"Ali Saade\" OR \"Ali Saed bin Ali el-Hoorie\" OR \"Ali Sayyid Muhamed Mustafa al-Bakri\" OR \"Ali Youssef Charara\" OR \"Amadou Koufa\" OR \"Amir Dianat\" OR \"Amir Muhammad Sa'id Abdal-Rahman al-Mawla\" OR \"Anatoliy Sergeyevich Kovalev\" OR \"Artem Valeryevich Ochichenko\" OR \"Ayman al-Zawahiri\" OR \"Aziz Haqqani\" OR \"Bashir Mohamed Mahamoud\" OR \"Carlos Alberto Garcia Camargo\" OR \"Cemil Bayik\" OR \"Cholo Abdi Abdullah\" OR \"Clíver Alcalá Cordones\" OR \"Daniel Pearl\" OR \"Dave Mankins\" OR \"Diosdado Cabello Rondón\" OR \"Duran Kalkan\" OR \"Earl Goen\" OR \"Evgeny Viktorovich Gladkikh\" OR \"Faker Ben Abdelaziz Boussora\" OR \"Faruq al-Suri\" OR \"Fuad Mohamed Khalaf\" OR \"Fuad Shukr\" OR \"General Muhammad Hussein-Zada Hejazi\" OR \"Gulmurod Khalimov\" OR \"Hafiz Abdul Rahman Makki\" OR \"Hafiz Saeed\" OR \"Hamad el Khairy\" OR \"Hamed Abdollahi\" OR \"Hamid al-Jaziri\" OR \"Hasan Izz-al-Din\" OR \"Hasan Nasrallah\" OR \"Hasib Muhammad Hadwan\" OR \"Hassan Afgooye\" OR \"Hassan Yaqub Ali\" OR \"Haytham 'Ali Tabataba'i\" OR \"Hebrew University Bombing\" OR \"Henry Castellanos Garzón\" OR \"Hernan Dario Velasquez Saldarriaga\" OR \"Hugo Carvajal Barrios\" OR \"Husayn Muhammed al-Umari\" OR \"Hussein Ali Fidow\" OR \"Ibrahim Ahmed Mahmoud al-Qosi\" OR \"Ibrahim al-Banna\" OR \"Ibrahim Haji Jama\" OR \"Ibrahim Ousmane\" OR \"Ibrahim Salih Mohammed al-Yacoub\" OR \"Ibrahim Taher\" OR \"Ihsan Ashour\" OR \"Ismail Haniyeh\" OR \"Issa Barrey\" OR \"Issa Jimaraou\" OR \"Iyad Ag Ghali\" OR \"Jaber A. Elbaneh\" OR \"Jafar\" OR \"Jamal Saeed Abdul Rahim\" OR \"Jehad Serwan Mostafa\" OR \"Jerel Duane Shaffer\" OR \"Joel Wesley Shrum\" OR \"John Granville\" OR \"Junzō Okudaira\" OR \"Kevin Scott Sutay\" OR \"Khalid Saeed al-Batarfi\" OR \"Khalil al-Rahman Haqqani\" OR \"Khalil Yusif Harb\" OR \"Ma'alim Daud\" OR \"Maalim Ayman\" OR \"Maalim Salman\" OR \"Mahad Karate\" OR \"Malik Abou Abdelkarim\" OR \"Mangal Bagh\" OR \"Manssor Arbabsiar\" OR \"Marat Valeryevich Tyukov\" OR \"Mark Randall Frerichs\" OR \"Mark Rich\" OR \"Mikhail Mikhailovich Gavrilov\" OR \"Mohamed Makawi Ibrahim Mohamed\" OR \"Mohamed Rage\" OR \"Mohammad Ibrahim Bazzi\" OR \"Mohammed Ali Hamadei\" OR \"Mohanad Osman Yousif Mohamed\" OR \"Mu'taz Numan 'Abd Nayif Najm al-Jaburi\" OR \"Mufti Noor Wali Mehsud\" OR \"Muhammad Abdullah Khalil Hussain ar-Rahayyal\" OR \"Muhammad Ahmed al-Munawar\" OR \"Muhammad al-Jawlani\" OR \"Muhammad Ja'far Qasir\" OR \"Muhammad Kawtharani\" OR \"Muhammad Khadir Musa Ramadan (Abu Bakr al-Gharib)\" OR \"Muhammad Qasim al-Bazzal\" OR \"Murat Karayilan\" OR \"Musa Asoglu\" OR \"Noé Suárez Rojas\" OR \"Ousmane Illiassou Djibo\" OR \"Pavel Aleksandrovich Akulov\" OR \"Pavel Valeryevich Frolov\" OR \"Peter Kilburn\" OR \"Petr Nikolayevich Pliskin\" OR \"Poula N'Gordie\" OR \"Radullan Sahiron\" OR \"Ramadan Abdullah Mohammad Shallah\" OR \"Rick Tenenoff\" OR \"Robert A. Levinson\" OR \"Sa'ad bin Atef al-Awlaki\" OR \"Sajid Mir\" OR \"Sajjad Kashian\" OR \"Salih al-Aruri\" OR \"Salim Jamil Ayyash\" OR \"Salman Raouf Salman\" OR \"Sami al-Uraydi\" OR \"Sami Jasim Muhammad al-Jaburi\" OR \"Sanaullah Ghafari\" OR \"Sayf al-Adl\" OR \"Seher Demir Sen\" OR \"Seka Musa Baluku\" OR \"Sergey Vladimirovich Detistov\" OR \"Seyyed Mohammad Hosein Musa Kazemi\" OR \"Sirajuddin Haqqani\" OR \"Steve Welsh\" OR \"Tahil Sali\" OR \"Talal Hamiyah\" OR \"Tareck Zaidan El Aissami Maddah\" OR \"Thomas Hargrove\" OR \"Timothy Van Dyke\" OR \"Wadoud Muhammad Hafiz al-Turki\" OR \"William Buckley\" OR \"Yahya Haqqani\" OR \"Yasin al-Suri\" OR \"Yasin Kilwe\" OR \"Yusef Ali Miraj\" OR \"Zerrin Sari\" OR \"Ziyad al-Nakhalah\" OR \"Zulkarnaen\")",                  "time_zone": "America/New_York"                }
+              }
+            ],
+            "must_not": [],
+            "should": []
+          }
+        },
+        {
+          "range": {
+            "system_timestamp": {
+              "format": "strict_date_optional_time",
+              "gte": "now-24h",
+              "lte": "now"
+            }
+          }
+        }
+      ],
+      "should": [],
+      "must_not": []
+    }
+  }
+}
