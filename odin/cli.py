@@ -9,14 +9,18 @@ def setup_parser():
     #### MAKE THE COMMANDLINE PARSER AND SUBPARSER ####
 
     parser = argparse.ArgumentParser(description='test description')
-    subparser = parser.add_subparsers(description='Functions of the Odin CLI')
+    subparser = parser.add_subparsers(description=collect_main.__doc__)
 
     #### MAKE A SUBPARSER THAT COLLECTS DATA FROM ELASTIC SEARCH ####
 
     collect_parser = subparser.add_parser('collect')
-    collect_parser.add_argument('--es_cred_file')
+    collect_parser.add_argument('--index_pattern', choices=['pulse-odin', 'pulse-odin*'], help='the correct odin index pattern to use')
+    collect_parser.add_argument('--query_path', help='The filepath to the Elastic Search query. File should be in JSON format.')
 
     collect_parser.set_defaults(func=collect_main)
+
+    #### ADD ANOTHER SUBPARSER HERE WHEN A NEW FUCTION OF ODIN IS NEEDED ####
+
     #### PARSE THE ARGUMENTS ####
     args = parser.parse_args()
 

@@ -1,9 +1,18 @@
-from .credentials import get_creds, make_api_call
+from .elastic_search import get_creds, make_api_call
+import os
 
 
 def collect_main(args):
-    cred_file = args.es_cred_file
-    data = get_creds(cred_file=cred_file)
-    make_api_call(data)
+    """This is a description of the Collect function of Odin
+
+    :param args:
+    :return:
+    """
+    qp = args.query_path
+    idx_p = args.index_pattern
+
+    cp = os.path.expanduser('~/.cred/odin_es_ro.json')
+    creds = get_creds(cp)
+    make_api_call(creds=creds, query_file_path=qp, index_pattern=idx_p)
 
 
