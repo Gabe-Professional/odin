@@ -7,13 +7,15 @@ from elasticsearch import Elasticsearch
 
 cwd = os.getcwd()
 
-def get_creds(cred_file):
+
+def get_creds():
     """A function to get the elastic search creds and return the data.
 
     :param cred_file:
     :return:
     """
-    with open(cred_file, 'r') as f:
+    cp = os.path.expanduser('~/.cred/odin_es_ro.json')
+    with open(cp, 'r') as f:
         data = json.load(f)
     return data
 
@@ -35,7 +37,7 @@ def make_api_call(creds: dict, query_file_path, index_pattern: str):
     params = query
 
     # res = req.get(url=ep, data=query, auth=(un, pw), headers=headers)
-    results = es.search(index=index_pattern, body=params, size=1000)
+    results = es.search(index=index_pattern, body=params, size=100000)
     data = results['hits']['hits'][:]
 
     tmp = {'uid': [],

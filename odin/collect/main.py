@@ -1,5 +1,5 @@
 from .elastic_search import get_creds, make_api_call
-import os
+
 
 
 def collect_main(args):
@@ -10,9 +10,7 @@ def collect_main(args):
     """
     qp = args.query_path
     idx_p = args.index_pattern
-
-    cp = os.path.expanduser('~/.cred/odin_es_ro.json')
-    creds = get_creds(cp)
+    creds = get_creds()
     make_api_call(creds=creds, query_file_path=qp, index_pattern=idx_p)
 
 

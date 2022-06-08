@@ -4,14 +4,21 @@ import logging
 
 
 def setup_parser():
-    """A Commandline Interface (CLI) for working with Odin data
-                """
-    #### MAKE THE COMMANDLINE PARSER AND SUBPARSER ####
+    """
+    A Commandline Interface (CLI) for working with Odin data with elastic search. \n\n
 
-    parser = argparse.ArgumentParser(description='test description')
+    test
+    """
+    # --------------------------------------------------------------------------------------------------------------- #
+    #### MAKE THE COMMANDLINE PARSER AND SUBPARSER
+    # --------------------------------------------------------------------------------------------------------------- #
+
+    parser = argparse.ArgumentParser(description=setup_parser.__doc__)
     subparser = parser.add_subparsers(description=collect_main.__doc__)
 
-    #### MAKE A SUBPARSER THAT COLLECTS DATA FROM ELASTIC SEARCH ####
+    # --------------------------------------------------------------------------------------------------------------- #
+    #### MAKE A SUBPARSER THAT COLLECTS DATA FROM ELASTIC SEARCH
+    # --------------------------------------------------------------------------------------------------------------- #
 
     collect_parser = subparser.add_parser('collect')
     collect_parser.add_argument('--index_pattern', choices=['pulse-odin', 'pulse-odin*'], help='the correct odin index pattern to use')
@@ -19,9 +26,17 @@ def setup_parser():
 
     collect_parser.set_defaults(func=collect_main)
 
-    #### ADD ANOTHER SUBPARSER HERE WHEN A NEW FUCTION OF ODIN IS NEEDED ####
+    # --------------------------------------------------------------------------------------------------------------- #
+    #### ADD ANOTHER SUBPARSER HERE WHEN A NEW FUCTION OF ODIN IS NEEDED
+    # --------------------------------------------------------------------------------------------------------------- #
+    #
+    #
+    #
+    #
+    # --------------------------------------------------------------------------------------------------------------- #
+    #### PARSE THE ARGUMENTS
+    # --------------------------------------------------------------------------------------------------------------- #
 
-    #### PARSE THE ARGUMENTS ####
     args = parser.parse_args()
 
     # todo: need to figure out verbose parser and what it is used for...
