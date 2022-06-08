@@ -1,7 +1,5 @@
 import argparse
 from odin.collect.main import collect_main
-import logging
-
 
 def setup_parser():
     """
