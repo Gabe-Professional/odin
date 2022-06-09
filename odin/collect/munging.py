@@ -17,7 +17,6 @@ def clean_data(data):
            'labse_encoding': []
            }
 
-    # todo: need to fix...data not looking right...
     for res in data:
         uid = res['_source']['uid']
         auth = res['_source']['norm']['author']
