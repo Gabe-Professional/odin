@@ -1,5 +1,5 @@
 from .elastic_search import get_creds, make_api_call
-from .munging import clean_data
+from .munging import clean_data, change_query_datetime
 import os
 
 def collect_main(args):
@@ -10,14 +10,19 @@ def collect_main(args):
     """
     qp = args.query_path
     idx_p = args.index_pattern
+    start_time = args.start_time
+    end_time = args.end_time
     creds = get_creds()
-    data = make_api_call(creds=creds, query_file_path=qp, index_pattern=idx_p)
+
+    if start_time:
+        query = change_query_datetime(start_time=start_time, end_time=end_time, query_path=qp)
+        data = make_api_call(creds=creds, query=query, index_pattern=idx_p)
+    else:
+        data = make_api_call(creds=creds, query=qp, index_pattern=idx_p)
     df = clean_data(data)
 
-    start_date = "2022-05-09T00:00:00.000Z"
-    end_date = "2022-06-08T00:00:00.000Z"
-
-    df.to_csv(os.path.expanduser('~/data/odin/rfj_alerting/{}_{}_rfj_alerting.csv'.format(start_date, end_date)), index=False)
+    fp = '~/data/odin/rfj_alerting/{}_{}_rfj_alerting.csv'.format(start_time, end_time)
+    df.to_csv(os.path.expanduser(fp), index=False)
     # Todo: add function that saves file in a reasonable way. i.e. startdate-enddate_topic.csv
     # Todo: need to add ability to parse datetime into the query...make default 24 hours.
     print(df)

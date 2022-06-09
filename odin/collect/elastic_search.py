@@ -20,26 +20,22 @@ def get_creds():
     return data
 
 
-def make_api_call(creds: dict, query_file_path, index_pattern: str):
-
+def make_api_call(creds: dict, query, index_pattern: str):
     un = creds['username']
     pw = creds['password']
     ep = creds['endpoint'][8:]
     url = ['https://{}:{}@{}'.format(un, pw, ep)]
     es = Elasticsearch(url)
 
-    # ep = str(ep) + '_count'
-    headers = {'Accept': 'application/json', 'Content-type': 'application/json'}
-
-    with open(query_file_path) as f:
-        query = json.load(f)
+    if type(query) == str:
+        with open(query) as f:
+            query = json.load(f)
+    elif type(query) == dict:
+        query = query
 
     params = query
-
-    # res = req.get(url=ep, data=query, auth=(un, pw), headers=headers)
     results = es.search(index=index_pattern, body=params, size=10000)
     data = results['hits']['hits'][:]
-    print(data[0]['_source'].keys())
     return data
 # def search(uri, term):
 #     query = json.dumps({
