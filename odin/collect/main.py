@@ -2,6 +2,7 @@ from .elastic_search import get_creds, make_api_call
 from .munging import clean_data, change_query_datetime
 import os
 
+
 def collect_main(args):
     """This is a description of the Collect function of Odin
 

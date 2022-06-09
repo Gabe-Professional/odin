@@ -1,5 +1,7 @@
 import json
 import os
+
+import numpy as np
 import pandas as pd
 
 
@@ -57,4 +59,14 @@ def change_query_datetime(start_time, end_time, query_path):
         data['query']['bool']['filter'][3]['range']['system_timestamp']['gte'] = start_time
         data['query']['bool']['filter'][3]['range']['system_timestamp']['lte'] = end_time
     return data
+
+
+def parse_vector_string(vector_string):
+    try:
+        vl = vector_string.replace('[', '').replace(']', '').replace(',', '').split()
+        vl = [float(i) for i in vl]
+    except:
+        vl = None
+    return vl
+
 
