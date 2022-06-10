@@ -36,8 +36,8 @@
           "range": {
             "system_timestamp": {
               "format": "strict_date_optional_time",
-              "gte": "now-24h",
-              "lte": "now"
+              "gte": "2022-05-29T00:00:00.000Z",
+              "lte": "2022-06-01T00:00:00.000Z"
             }
           }
         }

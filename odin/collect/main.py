@@ -14,6 +14,7 @@ def collect_main(args):
     start_time = args.start_time
     end_time = args.end_time
     creds = get_creds()
+    directory = args.directory
 
     if start_time:
         query = change_query_datetime(start_time=start_time, end_time=end_time, query_path=qp)
@@ -22,7 +23,7 @@ def collect_main(args):
         data = make_api_call(creds=creds, query=qp, index_pattern=idx_p)
     df = clean_data(data)
 
-    fp = '~/data/odin/rfj_alerting/{}_{}_rfj_alerting.csv'.format(start_time, end_time)
+    fp = os.path.join(directory, '{}_{}_rfj_alerting.csv'.format(start_time, end_time))
     df.to_csv(os.path.expanduser(fp), index=False)
     # Todo: add function that saves file in a reasonable way. i.e. startdate-enddate_topic.csv
     # Todo: need to add ability to parse datetime into the query...make default 24 hours.

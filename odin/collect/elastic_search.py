@@ -37,17 +37,3 @@ def make_api_call(creds: dict, query, index_pattern: str):
     results = es.search(index=index_pattern, body=params, size=10000)
     data = results['hits']['hits'][:]
     return data
-# def search(uri, term):
-#     query = json.dumps({
-#         "query": {
-#             "match": {
-#                 "doc.contact.uuid": term
-#             }
-#         }
-#     })
-#     user = ''
-#     pw = ''
-#     headers = {'Accept': 'application/json', 'Content-type': 'application/json'}
-#     response = requests.get(uri, data=query, headers=headers, auth=(user, pw))
-#     results = json.loads(response.text)
-#     return results

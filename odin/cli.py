@@ -20,12 +20,15 @@ def setup_parser():
     # --------------------------------------------------------------------------------------------------------------- #
 
     collect_parser = subparser.add_parser('collect', description=collect_main.__doc__)
+    collect_parser.add_argument('--directory', help='the directory path to save your data.')
     collect_parser.add_argument('--index_pattern', choices=['pulse-odin', 'pulse-odin*'], help='the correct odin index pattern to use.')
     collect_parser.add_argument('--query_path', help='The filepath to the Elastic Search query. File should be in JSON format.')
     collect_parser.add_argument('--start_time', help='The start time for the period of data being exported. '
                                                      'Time must be in YYYY-MM-DDTHH:MM:SS.SSSZ format (ISO 8601)')
     collect_parser.add_argument('--end_time', help='The end time for the period of data being exported.'
                                                    'Time must be in YYYY-MM-DDTHH:MM:SS.SSSZ format (ISO 8601)')
+
+
     # todo: need to add a function for custom attributes...or different groups based on the task...
     #  task informs data fields
 
