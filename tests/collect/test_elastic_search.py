@@ -2,31 +2,20 @@ import pytest
 import os
 import odin.collect.elastic_search as oce
 import odin.collect.munging as ocm
-from tests.fixture import query_path
-
+from tests.fixture import query_path, start_time, end_time
 """
 # Run test example:
 
 pytest tests/module/file.py::test_function_name
 """
-#  todo: make a file of pytest fixtures....
-# start_date = "2022-05-09T00:00:00.000Z"
-# end_date = "2022-06-08T00:00:00.000Z"
-
-# @pytest.fixture
-# def query_path():
-#     return os.path.join(os.path.dirname(__file__), '..', 'query', 'test_rfj_alerting.json')
 
 
 def test_test():
     print('test test')
 
 
-def test_make_api_call(query_path):
+def test_make_api_call(query_path, start_time, end_time):
     creds = oce.get_creds()
-
-    start_time = "2022-05-08T00:00:00.000Z"
-    end_time = "2022-05-09T00:00:00.000Z"
     # Test original file query
     data = oce.make_api_call(creds=creds, query=query_path, index_pattern='pulse-odin*')
     assert len(data) > 0
