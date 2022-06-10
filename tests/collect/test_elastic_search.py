@@ -2,8 +2,7 @@ import pytest
 import os
 import odin.collect.elastic_search as oce
 import odin.collect.munging as ocm
-
-
+from tests.fixture import query_path
 
 """
 # Run test example:
@@ -14,12 +13,14 @@ pytest tests/module/file.py::test_function_name
 # start_date = "2022-05-09T00:00:00.000Z"
 # end_date = "2022-06-08T00:00:00.000Z"
 
-@pytest.fixture
-def query_path():
-    return os.path.join(os.path.dirname(__file__), '..', 'query', 'test_rfj_alerting.json')
+# @pytest.fixture
+# def query_path():
+#     return os.path.join(os.path.dirname(__file__), '..', 'query', 'test_rfj_alerting.json')
+
 
 def test_test():
     print('test test')
+
 
 def test_make_api_call(query_path):
     creds = oce.get_creds()

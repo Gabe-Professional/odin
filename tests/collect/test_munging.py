@@ -1,8 +1,6 @@
-import json
-import os
 import odin.collect.munging as ocm
 import odin.collect.elastic_search as ose
-from tests.collect.test_elastic_search import query_path
+from tests.fixture import query_path
 
 
 def test_clean_data(query_path):
