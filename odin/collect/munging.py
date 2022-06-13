@@ -16,7 +16,8 @@ def clean_data(data):
            'domain': [],
            'labse_encoding': [],
            'body_translation': [],
-           'follower_count': []
+           'follower_count': [],
+           'hashtags': []
            }
 
     for res in data:
@@ -61,6 +62,10 @@ def clean_data(data):
             fc = int(res['_source']['meta']['followers_count'][0]['results'][0])
         except:
             fc = None
+        try:
+            ht = res['_source']['meta']['hashtag'][0]['results']
+        except:
+            ht = None
 
         tmp['uid'].append(uid)
         tmp['timestamp'].append(ts)
@@ -72,6 +77,7 @@ def clean_data(data):
         tmp['labse_encoding'].append(en)
         tmp['body_translation'].append(bt)
         tmp['follower_count'].append(fc)
+        tmp['hashtags'].append(ht)
 
     pd.set_option('display.max_columns', None)
     df = pd.DataFrame(tmp).drop_duplicates(subset='uid').sort_values(by='system_timestamp')
