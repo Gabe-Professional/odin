@@ -1,0 +1,59 @@
+{
+"query": {
+    "bool": {
+      "must": [],
+      "filter": [
+        {
+          "range": {
+            "norm.timestamp": {
+              "format": "strict_date_optional_time",
+              "gte": "2022-06-12T00:00:00.000Z",
+              "lte": "2022-06-13T15:00:00.000Z"
+            }
+          }
+        },
+        {
+          "bool": {
+            "should": [
+              {
+                "match_phrase": {
+                  "meta.ml_ner.results.person.text": "Hafiz Saeed"
+                }
+              },
+              {
+                "match_phrase": {
+                  "meta.ml_ner.results.person.text": "Hafiz Saeed\n"
+                }
+              },
+              {
+                "match_phrase": {
+                  "meta.ml_ner.results.person.text": "Hafiz Saeed\n        "
+                }
+              }
+            ],
+            "minimum_should_match": 1
+          }
+        },
+        {
+          "bool": {
+            "should": [
+              {
+                "match_phrase": {
+                  "type": "tweet_history"
+                }
+              },
+              {
+                "match_phrase": {
+                  "type": "tweet_traptor"
+                }
+              }
+            ],
+            "minimum_should_match": 1
+          }
+        }
+      ],
+      "should": [],
+      "must_not": []
+    }
+  }
+}
