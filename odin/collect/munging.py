@@ -6,6 +6,7 @@ import pandas as pd
 
 
 def clean_data(data):
+    #todo: add argument to import list of desired attributes
 
     tmp = {'uid': [],
            'timestamp': [],
