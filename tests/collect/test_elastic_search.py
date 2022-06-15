@@ -1,7 +1,7 @@
 import pytest
 import os
 import odin.collect.elastic_search as oce
-import odin.collect.munging as ocm
+import odin.utils.munging as ocm
 from tests.fixture import query_path, start_time, end_time
 """
 # Run test example:

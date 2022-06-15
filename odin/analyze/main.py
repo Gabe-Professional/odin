@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.cluster import k_means, KMeans
-from odin.collect.munging import parse_vector_string
+from odin.utils.munging import parse_vector_string
 import numpy as np
 import matplotlib.pyplot as plt
 

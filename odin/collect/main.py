@@ -1,5 +1,5 @@
 from .elastic_search import get_creds, make_api_call
-from .munging import clean_data, change_query_datetime
+from odin.utils.munging import clean_data, change_query_datetime
 import os
 
 
