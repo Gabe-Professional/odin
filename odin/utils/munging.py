@@ -1,13 +1,19 @@
 import json
 import os
-
+import nltk
 import numpy as np
 import pandas as pd
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
+nltk.download('stopwords')
+stpwords = stopwords.words('english')
+lemmatizer = WordNetLemmatizer()
 
 
-#todo: need to move munging stuff to utils directory
+# todo: need to move munging stuff to utils directory
 def clean_data(data):
-    #todo: add argument to import list of desired attributes
+    # todo: add argument to import list of desired attributes
 
     tmp = {'uid': [],
            'timestamp': [],
@@ -103,3 +109,38 @@ def parse_vector_string(vector_string):
         vl = None
     return vl
 
+
+def text_tokenize(string, add_stopwords=list(), min_word_length=3):
+
+    if len(add_stopwords) > 0:
+        stpwords.extend(add_stopwords)
+    tokens = nltk.word_tokenize(string)
+    text_fix = list(filter(lambda token: nltk.tokenize.punkt.PunktToken(token).is_non_punct, tokens))
+
+    text_fix = [word.lower() for word in text_fix]
+    text_fix = list(filter(lambda token: token not in stpwords, text_fix))
+    text_fix = [word for word in text_fix if len(word) >= min_word_length]
+    text_fix = [lemmatizer.lemmatize(word) for word in text_fix]
+    text_fix = ' '.join(text_fix)
+    return text_fix
+
+
+def pca(data, nRedDim=0, normalise=1):
+    m = np.mean(data, axis=0)
+    data -= m
+    C = np.cov(np.transpose(data))
+
+    evals, evecs = np.linalg.eig(C)
+    indices = np.argsort(evals)
+    indices = indices[::-1]
+    evecs = evecs[:, indices]
+    evals = evals[indices]
+
+    if nRedDim > 0:
+        evecs = evecs[:, :nRedDim]
+    if normalise:
+        for i in range(np.shape(evecs)[1]):
+            evecs[:, i] / np.linalg.norm(evecs[:, i]) * np.sqrt(evals[i])
+    x = np.dot(np.transpose(evecs), np.transpose(data))
+    y = np.transpose(np.dot(evecs, x)) + m
+    return x, y, evals, evecs
