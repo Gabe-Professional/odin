@@ -34,3 +34,8 @@ def test_text_tokenize():
     lem = oum.text_tokenize(string, add_stopwords=['like', 'would'])
     assert type(lem) == str
     assert string != lem
+
+
+def test_document():
+    string = 'This is a PICTURE of a CAT!!! But not really :)...And I would like a picture of a dog'
+    cls = oum.label_document(label_text='picture', doc_text=string)

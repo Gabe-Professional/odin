@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+import scipy.linalg as la
 
 nltk.download('stopwords')
 stpwords = stopwords.words('english')
@@ -144,3 +145,37 @@ def pca(data, nRedDim=0, normalise=1):
     x = np.dot(np.transpose(evecs), np.transpose(data))
     y = np.transpose(np.dot(evecs, x)) + m
     return x, y, evals, evecs
+
+
+def lda(targets: np.array, X: np.array):
+    X -= X.mean(axis=0)
+    n_X = X.shape[0]
+    nDim = X.shape[1]
+    Sw = np.zeros((nDim, nDim))
+    Sb = np.zeros((nDim, nDim))
+    C = np.cov(np.transpose(X))
+    classes = np.unique(targets)
+    for i in range(len(classes)):
+        idxs = np.squeeze(np.where(targets == classes[i]))
+        d = np.squeeze(X[idxs, :])
+        class_cov = np.cov(np.transpose(d))
+        Sw += float(np.shape(idxs)[0]) / n_X * class_cov
+    Sb = C - Sw
+    ev = la.eig(Sw, Sb)
+    evals, evecs = ev[0], ev[1]
+    idxs = np.argsort(evals)
+    idxs = idxs[::-1]
+    evecs = evecs[:, idxs]
+    evals = evals[idxs]
+    w = evecs[:, :]
+    X = np.dot(X, w)
+    return X, w
+
+
+def label_document(label_text: str, doc_text: str):
+    doc_text = doc_text.lower()
+    if label_text in doc_text:
+        cls = 1
+    else:
+        cls = 0
+    return cls
