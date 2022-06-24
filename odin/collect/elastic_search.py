@@ -21,6 +21,13 @@ def get_creds():
 
 
 def make_api_call(creds: dict, query, index_pattern: str):
+    """
+
+    :param creds:
+    :param query:
+    :param index_pattern:
+    :return: data:
+    """
     un = creds['username']
     pw = creds['password']
     ep = creds['endpoint'][8:]
