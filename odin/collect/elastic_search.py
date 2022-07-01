@@ -9,7 +9,7 @@ cwd = os.getcwd()
 
 
 def get_creds():
-    """A function to get the elastic search creds and return the data.
+    """A function to get the elastic search ES_CREDS and return the data.
 
     :param cred_file:
     :return:

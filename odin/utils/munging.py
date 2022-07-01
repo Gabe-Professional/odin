@@ -12,6 +12,58 @@ stpwords = stopwords.words('english')
 lemmatizer = WordNetLemmatizer()
 
 
+reward_offer_names = ["william higgins", "abd al-rahman al-maghrebi",
+                      "abdelbasit alhaj alhassan haj hamad", "abdelkarim hussein mohamed al-nasser",
+                      "abdelrahman abbas rahama", "abdelraouf abu zaid mohamed hamza", "abderraouf ben habib jdey",
+                      "abdikadir mohamed abdikadir", "abdikadir mumin", "abdiqadir mu’min", "abdolreza rahmani fazli",
+                      "abdul rahman yasin", "abdul reza shahla'i", "abdul saboor", "abdul wali", "abdul zakir",
+                      "abdulbari al-kotf", "abdullah ahmed abdullah", "abdullah nowbahar", "abdullahi osman mohamed",
+                      "abdullahi yare", "abu ‘abd al-karim al-masri", "abu huzeifa", "abu mus’ab al-barnawi",
+                      "abu oubeïda youssouf al annabi", "abu ubaidah (direye)", "abu ubaydah yusuf al-anabi",
+                      "abu-muhammad al-shimali", "abu-yusuf al-muhajir", "abubakar shekau", "abukar ali adan",
+                      "adham husayn tabaja", "adnan abu walid al-sahrawi", "adnan hussein kawtharani", "ahadon adak",
+                      "ahlam ahmad al-tamimi", "ahmad ibrahim al-mughassil", "ahmed iman ali", "al mahmoud ag baye", "al-shabaab", "al-shabaab's financial mechanisms", "ali al-sha'ir", "ali atwa", "ali gholam shakuri",
+                      "ali mohamud rage", "ali qasir", "ali saade", "ali saed bin ali el-hoorie",
+                      "ali sayyid muhamed mustafa al-bakri", "ali youssef charara", "amadou koufa", "amir dianat",
+                      "amir muhammad sa’id abdal-rahman al-mawla", "anatoliy sergeyevich kovalev",
+                      "artem valeryevich ochichenko", "ayman al-zawahiri", "aziz haqqani", "bashir mohamed mahamoud",
+                      "carlos alberto garcia camargo", "cemil bayik", "cholo abdi abdullah", "clíver alcalá cordones",
+                      "daniel pearl", "dave mankins", "diosdado cabello rondón", "duran kalkan", "earl goen",
+                      "evgeny viktorovich gladkikh", "faker ben abdelaziz boussora", "faruq al-suri",
+                      "fuad mohamed khalaf", "fuad shukr", "general muhammad hussein-zada hejazi", "gulmurod khalimov",
+                      "hafiz abdul rahman makki", "hafiz saeed", "hamad el khairy", "hamed abdollahi",
+                      "hamid al-jaziri", "hasan izz-al-din", "hasan nasrallah", "hasib muhammad hadwan",
+                      "hassan afgooye", "hassan yaqub ali", "haytham ‘ali tabataba’i", "hebrew university bombing",
+                      "henry castellanos garzón", "hernan dario velasquez saldarriaga", "hugo carvajal barrios",
+                      "husayn muhammed al-umari", "hussein ali fidow", "ibrahim ahmed mahmoud al-qosi",
+                      "ibrahim al-banna", "ibrahim haji jama", "ibrahim ousmane", "ibrahim salih mohammed al-yacoub",
+                      "ibrahim taher", "ihsan ashour", "ismail haniyeh", "issa barrey", "issa jimaraou", "iyad ag ghali",
+                      "jaber a. elbaneh", "jafar", "jamal saeed abdul rahim", "jehad serwan mostafa",
+                      "jerel duane shaffer", "joel wesley shrum", "john granville", "junzō okudaira",
+                      "kevin scott sutay", "khalid saeed al-batarfi", "khalil al-rahman haqqani", "khalil yusif harb",
+                      "ma’alim daud", "maalim ayman", "maalim salman", "mahad karate", "malik abou abdelkarim",
+                      "mangal bagh", "manssor arbabsiar", "marat valeryevich tyukov", "mark randall frerichs",
+                      "mark rich", "mikhail mikhailovich gavrilov", "mohamed makawi ibrahim mohamed", "mohamed rage",
+                      "mohammad ibrahim bazzi", "mohammed ali hamadei", "mohanad osman yousif mohamed",
+                      "mu‘taz numan ‘abd nayif najm al-jaburi", "mufti noor wali mehsud",
+                      "muhammad abdullah khalil hussain ar-rahayyal", "muhammad ahmed al-munawar",
+                      "muhammad al-jawlani", "muhammad ja'far qasir", "muhammad kawtharani",
+                      "muhammad khadir musa ramadan (abu bakr al-gharib)", "muhammad qasim al-bazzal",
+                      "murat karayilan", "musa asoglu", "noé suárez rojas", "ousmane illiassou djibo",
+                      "pavel aleksandrovich akulov", "pavel valeryevich frolov", "peter kilburn",
+                      "petr nikolayevich pliskin", "poula n’gordie", "radullan sahiron",
+                      "ramadan abdullah mohammad shallah", "rick tenenoff", "robert a. levinson",
+                      "sa’ad bin atef al-awlaki", "sajid mir", "sajjad kashian", "salih al-aruri",
+                      "salim jamil ayyash", "salman raouf salman", "sami al-uraydi", "sami jasim muhammad al-jaburi",
+                      "sanaullah ghafari", "sayf al-adl", "seher demir sen", "seka musa baluku",
+                      "sergey vladimirovich detistov", "seyyed mohammad hosein musa kazemi", "sirajuddin haqqani",
+                      "steve welsh", "tahil sali", "talal hamiyah", "tareck zaidan el aissami maddah", "thomas hargrove", "timothy van dyke", "wadoud muhammad hafiz al-turki", "william buckley", "yahya haqqani",
+                      "yasin al-suri", "yasin kilwe", "yusef ali miraj", "zerrin sari", "ziyad al-nakhalah",
+                      "zulkarnaen", "suellen tennyson"]
+
+
+reward_offer_names_dict = {name: name for name in reward_offer_names}
+
 # todo: need to move munging stuff to utils directory
 def clean_data(data):
     # todo: add argument to import list of desired attributes
