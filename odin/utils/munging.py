@@ -6,13 +6,14 @@ import pandas as pd
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import scipy.linalg as la
+import re
 
 nltk.download('stopwords')
 stpwords = stopwords.words('english')
 lemmatizer = WordNetLemmatizer()
 
 
-reward_offer_names = ["william higgins", "abd al-rahman al-maghrebi",
+REWARD_OFFER_NAMES = ["william higgins", "abd al-rahman al-maghrebi",
                       "abdelbasit alhaj alhassan haj hamad", "abdelkarim hussein mohamed al-nasser",
                       "abdelrahman abbas rahama", "abdelraouf abu zaid mohamed hamza", "abderraouf ben habib jdey",
                       "abdikadir mohamed abdikadir", "abdikadir mumin", "abdiqadir mu’min", "abdolreza rahmani fazli",
@@ -61,8 +62,25 @@ reward_offer_names = ["william higgins", "abd al-rahman al-maghrebi",
                       "yasin al-suri", "yasin kilwe", "yusef ali miraj", "zerrin sari", "ziyad al-nakhalah",
                       "zulkarnaen", "suellen tennyson"]
 
+# todo: probably should converge like organizations...i.e. hizballah and saudi hizballah...
+ORGANIZATION_NAMES = ["15 may organization", "abu nidal organization", "abu sayyaf group", "al-mourabitoun",
+                      "al-nusrah front", "al-qa'ida", "al-qa'ida in iraq", "al-qa'ida in the arabian peninsula",
+                      "al-qa'ida in the islamic maghreb", "al-qa'ida in the lands of the two niles", "al-shabaab",
+                      "ansar al-dine", "ansar al-tawhid", "egyptian islamic jihad", "haqqani network",
+                      "harakat al-muqawama al-islamiya", "hayat tahrir al-sham", "hizballah", "hurras al-din",
+                      "isis in the greater sahara", "islamic revolutionary guard corps",
+                      "islamic revolutionary guard corps-qods force", "islamic state in iraq and syria",
+                      "islamic state west africa province", "islamic state's khorasan province",
+                      "jama’at nusrat al-islam wal-muslimin", "jamaat-ul-ahrar", "japanese red army",
+                      "jemaah islamiya", "kurdistan workers party", "lashkar-e tayyiba",
+                      "moro national liberation front", "movement for unity and jihad in west africa",
+                      "revolutionary organization 17 november", "revolutionary people’s liberation party/front",
+                      "revolutionary struggle", "saudi hizballah", "tehrik-e taliban pakistan"]
 
-reward_offer_names_dict = {name: name for name in reward_offer_names}
+
+REWARD_OFFER_NAMES_DICT = {name: name for name in REWARD_OFFER_NAMES}
+ORGANIZATION_NAMES_DICT = {re.sub(pattern="[^A-Za-z0-9 ]+", repl='', string=org): org for org in ORGANIZATION_NAMES}
+
 
 # todo: need to move munging stuff to utils directory
 def clean_data(data):
@@ -231,3 +249,27 @@ def label_document(label_text: str, doc_text: str):
     else:
         cls = 0
     return cls
+
+
+def label_text_from_dict(document_text: str, label_dict=None):
+    # todo: need to figure out how to best clean the text.
+    doc_text = document_text.lower()
+    doc_text = re.sub(pattern="[^A-Za-z0-9 ]+", repl="", string=doc_text)
+    hits = []
+    if label_dict is None:
+        label_dict = REWARD_OFFER_NAMES_DICT
+        for name in label_dict:
+
+            if name in doc_text:
+                hits.append(True)
+            else:
+                hits.append(False)
+    else:
+        other_dict = label_dict
+        for label in other_dict:
+            if label in doc_text:
+                hits.append(True)
+            else:
+                hits.append(False)
+    hits = np.array(list(label_dict.values()))[hits].tolist()
+    return hits

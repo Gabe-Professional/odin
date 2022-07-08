@@ -39,3 +39,25 @@ def test_text_tokenize():
 def test_document():
     string = 'This is a PICTURE of a CAT!!! But not really :)...And I would like a picture of a dog'
     cls = oum.label_document(label_text='picture', doc_text=string)
+
+
+def test_get_reward_offer_subject_from_text():
+    test_document_text = "#HAFIZ SAEED' is one of the reward offer subjects..." \
+                         "this function should label the name as a label"
+    subject = oum.label_text_from_dict(document_text=test_document_text)
+    dct = oum.REWARD_OFFER_NAMES_DICT
+    for s in subject:
+        assert s in dct
+    assert len(subject) > 0
+    assert type(subject) == list
+
+    test_document_text = "#REVOLUTIONARY STRUGGLE is one of the organization names, but it is not SAUDI HIZBALLAH'..." \
+                         "this function should label the name as a label"
+    orgs = oum.label_text_from_dict(document_text=test_document_text, label_dict=oum.ORGANIZATION_NAMES_DICT)
+    dct = oum.ORGANIZATION_NAMES_DICT
+    for o in orgs:
+        assert o in dct
+    assert len(orgs) > 0
+    assert type(orgs) == list
+
+
