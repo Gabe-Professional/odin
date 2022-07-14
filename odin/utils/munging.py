@@ -83,7 +83,7 @@ ORGANIZATION_NAMES_DICT = {re.sub(pattern="[^A-Za-z0-9 ]+", repl='', string=org)
 
 
 # todo: need to move munging stuff to utils directory
-def clean_data(data):
+def clean_data(data, drop_duplicate_uids=True):
     # todo: add argument to import list of desired attributes
 
     tmp = {'uid': [],
@@ -159,7 +159,10 @@ def clean_data(data):
         tmp['hashtags'].append(ht)
 
     pd.set_option('display.max_columns', None)
-    df = pd.DataFrame(tmp).drop_duplicates(subset='uid').sort_values(by='system_timestamp')
+    if drop_duplicate_uids is True:
+        df = pd.DataFrame(tmp).drop_duplicates(subset='uid').sort_values(by='system_timestamp')
+    else:
+        df = pd.DataFrame(tmp)
     return df
 
 
@@ -252,10 +255,12 @@ def label_document(label_text: str, doc_text: str):
 
 
 def label_text_from_dict(document_text: str, label_dict=None):
-    # todo: need to figure out how to best clean the text.
-    doc_text = document_text.lower()
-    doc_text = re.sub(pattern="[^A-Za-z0-9 ]+", repl="", string=doc_text)
+    doc_text = re.sub(r'http\S+', '', str(document_text).lower())
+    # doc_text = re.sub(pattern="[^A-Za-z0-9 ]+", repl="", string=doc_text)
+    doc_text = re.sub(pattern="[@#:0-9]", repl="", string=doc_text)
+
     hits = []
+
     if label_dict is None:
         label_dict = REWARD_OFFER_NAMES_DICT
         for name in label_dict:
@@ -266,8 +271,9 @@ def label_text_from_dict(document_text: str, label_dict=None):
                 hits.append(False)
     else:
         other_dict = label_dict
-        for label in other_dict:
-            if label in doc_text:
+        for key in other_dict:
+            key = str(key)
+            if key in doc_text:
                 hits.append(True)
             else:
                 hits.append(False)

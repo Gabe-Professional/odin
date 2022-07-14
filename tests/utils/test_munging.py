@@ -1,7 +1,9 @@
 # import odin.collect.munging as oum
+import pandas as pd
+
 import odin.utils.munging as oum
 import odin.collect.elastic_search as ose
-from tests.fixture import query_path, start_time, end_time
+from tests.fixture import query_path, start_time, end_time, name_labels, names_data_csv
 
 
 strg = "[0.015952223911881447, 0.029908902943134308, -0.062116459012031555, -0.06531211733818054, " \
@@ -10,15 +12,15 @@ strg = "[0.015952223911881447, 0.029908902943134308, -0.062116459012031555, -0.0
        "-0.05275590717792511, -0.021328287199139595]"
 
 
-# def test_lst_string_to_flt():
-#     lst = str_to_lst_flt(strg)
-#     assert type(lst[0]) == float
-
-
+# todo: update clean data function test...import the saved data, not query new data.
 def test_clean_data(query_path):
     creds = ose.get_creds()
     data = ose.make_api_call(creds=creds, query=query_path, index_pattern='pulse-odin*')
-    df = oum.clean_data(data)
+    df1 = oum.clean_data(data, drop_duplicate_uids=False)
+    l1 = len(df1)
+    df2 = oum.clean_data(data, drop_duplicate_uids=True)
+    l2 = len(df2)
+    assert l1 > l2
 
 
 def test_add_query_datetime(query_path, start_time, end_time):
@@ -41,23 +43,32 @@ def test_document():
     cls = oum.label_document(label_text='picture', doc_text=string)
 
 
-def test_get_reward_offer_subject_from_text():
-    test_document_text = "#HAFIZ SAEED' is one of the reward offer subjects..." \
-                         "this function should label the name as a label"
-    subject = oum.label_text_from_dict(document_text=test_document_text)
-    dct = oum.REWARD_OFFER_NAMES_DICT
-    for s in subject:
-        assert s in dct
-    assert len(subject) > 0
-    assert type(subject) == list
+def test_label_text_from_dict(name_labels, names_data_csv):
+    test_df = pd.read_csv(names_data_csv)
+    test_labels_df = pd.read_csv(name_labels)
+    labels_dict = {}
+    for idx in range(len(test_labels_df)):
+        key, label = test_labels_df.iloc[idx, :]['name'], test_labels_df.iloc[idx, :]['label']
+        labels_dict[key] = label
 
-    test_document_text = "#REVOLUTIONARY STRUGGLE is one of the organization names, but it is not SAUDI HIZBALLAH'..." \
-                         "this function should label the name as a label"
-    orgs = oum.label_text_from_dict(document_text=test_document_text, label_dict=oum.ORGANIZATION_NAMES_DICT)
-    dct = oum.ORGANIZATION_NAMES_DICT
-    for o in orgs:
-        assert o in dct
-    assert len(orgs) > 0
-    assert type(orgs) == list
+    for idx in range(len(test_df)):
+        test_document_text = test_df.loc[idx, 'body']
+        subject = oum.label_text_from_dict(document_text=test_document_text, label_dict=labels_dict)
+        assert len(subject) != 0
+
+    dct = oum.REWARD_OFFER_NAMES_DICT
+    # for s in subject:
+    #     assert s in dct
+    # assert len(subject) > 0
+    # assert type(subject) == list
+
+    # test_document_text = "#REVOLUTIONARY STRUGGLE is one of the organization names, but it is not SAUDI HIZBALLAH'..." \
+    #                      "this function should label the name as a label"
+    # orgs = oum.label_text_from_dict(document_text=test_document_text, label_dict=oum.ORGANIZATION_NAMES_DICT)
+    # dct = oum.ORGANIZATION_NAMES_DICT
+    # for o in orgs:
+    #     assert o in dct
+    # assert len(orgs) > 0
+    # assert type(orgs) == list
 
 

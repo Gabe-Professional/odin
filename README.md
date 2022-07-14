@@ -1,4 +1,4 @@
-ODIN -- Module to support Analysis of Elastic Search Data
+ODIN -- Module to support Analysis of ElasticSearch Data
 ===================================================
 This is a library of analysis tools used extensively by Odin.  Currently, this package
 serves as both a python (eventually R also) Elastic Search API as well as a set of 
