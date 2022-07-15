@@ -71,4 +71,7 @@ def test_label_text_from_dict(name_labels, names_data_csv):
     # assert len(orgs) > 0
     # assert type(orgs) == list
 
+def test_parse_vector_string(names_data_csv):
+    df = pd.read_csv(names_data_csv)
+    vl = oum.parse_vector_string(df.loc[0, 'labse_encoding'])
 

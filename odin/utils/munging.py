@@ -96,7 +96,8 @@ def clean_data(data, drop_duplicate_uids=True):
            'labse_encoding': [],
            'body_translation': [],
            'follower_count': [],
-           'hashtags': []
+           'hashtags': [],
+           'url': []
            }
 
     for res in data:
@@ -145,6 +146,10 @@ def clean_data(data, drop_duplicate_uids=True):
             ht = res['_source']['meta']['hashtag'][0]['results']
         except:
             ht = None
+        try:
+            url = res['_source']['norm']['url']
+        except:
+            url = None
 
         tmp['uid'].append(uid)
         tmp['timestamp'].append(ts)
@@ -157,12 +162,14 @@ def clean_data(data, drop_duplicate_uids=True):
         tmp['body_translation'].append(bt)
         tmp['follower_count'].append(fc)
         tmp['hashtags'].append(ht)
+        tmp['url'].append(url)
 
     pd.set_option('display.max_columns', None)
     if drop_duplicate_uids is True:
         df = pd.DataFrame(tmp).drop_duplicates(subset='uid').sort_values(by='system_timestamp')
     else:
         df = pd.DataFrame(tmp)
+    print(df)
     return df
 
 
@@ -178,7 +185,7 @@ def change_query_datetime(start_time, end_time, query_path):
 def parse_vector_string(vector_string):
     try:
         vl = vector_string.replace('[', '').replace(']', '').replace(',', '').split()
-        vl = [float(i) for i in vl]
+        vl = list(float(i) for i in vl)
     except:
         vl = None
     return vl
