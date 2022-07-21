@@ -169,7 +169,6 @@ def clean_data(data, drop_duplicate_uids=True):
         df = pd.DataFrame(tmp).drop_duplicates(subset='uid').sort_values(by='system_timestamp')
     else:
         df = pd.DataFrame(tmp)
-    print(df)
     return df
 
 
