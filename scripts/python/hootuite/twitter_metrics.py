@@ -9,6 +9,14 @@ from statsmodels.formula.api import ols
 import seaborn as sns
 
 
+# todo: need to make text processing utils
+
+def remove_websites(text):
+    text = re.split('https:\/\/.*', str(text))[0]
+    text = re.split('http:\/\/.*', str(text))[0]
+    return text
+
+
 def get_reward_offer_amount(text):
     # todo: need to filter out phone numbers...
 
@@ -17,8 +25,9 @@ def get_reward_offer_amount(text):
     # if 'http://www.rewardsforjustice.net' in text:
     #     print('http://www.rewardsforjustice.net')
     # print(text)
-    text = re.split('https:\/\/.*', str(text))[0]
-    text = re.split('http:\/\/.*', str(text))[0]
+    # text = re.split('https:\/\/.*', str(text))[0]
+    # text = re.split('http:\/\/.*', str(text))[0]
+    text = remove_websites(text)
 
     if '$3' in text:
         return 5
@@ -57,6 +66,22 @@ def has_string(string: str, body: str):
         return 0
 
 
+def get_char_count(text):
+    text = remove_websites(text)
+    text = text.replace(' ', '')
+    l = int(len(text))
+    return l
+
+
+def get_word_count(text: str):
+    # todo: remove websites?
+    text = remove_websites(text)
+    lst = list((filter(('').__ne__, text.split(sep=' '))))
+
+    word_cnt = len(lst)
+    return word_cnt
+
+
 def main():
     ###### SET THE VARIABLES ######
     pd.set_option('display.max_rows', None)
@@ -78,6 +103,16 @@ def main():
     df['reward_offer_post?'] = df['post_message'].apply(lambda x: is_reward_offer(x))
     df['has_website?'] = df['post_message'].apply(lambda x: has_website(x))
     df[variable] = df['post_message'].apply(lambda x: has_string(string=string, body=x))
+    # df['message_length'] = df['post_message'].apply(lambda x: int(len(x)))
+    df['message_length'] = df['post_message'].apply(lambda x: get_char_count(x))
+    df['word_count'] = df['post_message'].apply(lambda x: get_word_count(x))
+
+    # print(sorted(df['word_count']))
+    print(df[['post_message', 'word_count']].sort_values(by='word_count'))
+
+    plt.hist(np.log10(df[df['word_count'] > 20]['word_count']), ec='w')
+    plt.show()
+    exit()
 
     N = len(df)
 
@@ -138,10 +173,6 @@ def main():
     # ax = sns.swarmplot(x=f'ro_over_0', y=f'log_{metric}', data=data_df[['ro_over_0', f'log_{metric}']], color='#7d0013')
     model = ols(f'log_{metric} ~ C(has_char)', data=test_sample_df[[f'{variable}', f'log_{metric}']]).fit()
     anova_table = sm.stats.anova_lm(model, typ=2)
-    # print(list(anova_table.index))
-    # print(list(anova_table.columns))
-    # print(np.asarray(anova_table))
-    # exit()
 
     rows = []
     for r in range(len(anova_table)):
@@ -150,8 +181,7 @@ def main():
 
     row_labels = list(anova_table.index)
     col_labels = list(anova_table.columns)
-    # print(rows, row_labels, col_labels)
-    # exit()
+
 
     table = plt.table(cellText=rows,
                       colWidths=[0.2] * 4,
@@ -161,7 +191,6 @@ def main():
 
     print(anova_table)
     print(type(anova_table))
-    # plt.text('Anova Table', size=12)
     plt.tight_layout()
     f.savefig(os.path.join(directory, f'{metric}_{variable}_boxplot.png'))
 
