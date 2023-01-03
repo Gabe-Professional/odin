@@ -14,7 +14,7 @@ and visualizing that data.
 2. [Installation](#installation)
   * [Installing Python & PIP](#installing-python-&-pip)
   * [Getting VPN Access](#getting-vpn-access)
-  * [Setting up .SIGMA](#setting-up-.sigma)
+  * [Setting up](#setting-up)
   * [General User Install](#for-general-users)
   * [Developer Installation Instructions](#for-developers)
 4. [Contributing to ODIN](#contributing-to-odin)
