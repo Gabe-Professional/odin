@@ -1,4 +1,5 @@
 import base64
+import datetime
 import email
 import os
 import pickle
@@ -27,6 +28,10 @@ from mimetypes import guess_type as guess_mime_type
 
 # todo: plan is to ---- connect gmail api, read emails on 1st of month, search for hootsuite, download hootsuite
 #  twitter metrics, log metrics into social media airtable.
+
+AT_DATA = {
+            "records": []
+        }
 
 
 def get_permissions():
@@ -119,6 +124,20 @@ def get_dl_link_from_msg(mime_msg):
 
 def main():
     user_id = 'me'
+    # DATE_TIME = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+    ##### AIRTABLE BASE VARIABLES
+    AT_CRED_PATH = os.path.expanduser('~/.cred/social_media_at_test.json')
+    with open(AT_CRED_PATH, 'r') as f:
+        cred_data = json.load(f)
+
+    BASE_ID = cred_data['base_id']
+    TABLE_NAME = cred_data['table_name']
+    API_KEY = cred_data['api_key']
+
+    END = f'https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}'
+    HEADERS = {'Authorization': f'Bearer {API_KEY}',
+               'Content-Type': 'application/json'}
+
     DATE = date.today()
     DIRECTORY = os.path.expanduser('~/data/odin/social_media/hootsuite/monthly_metrics')
     SCOPES, EMAIL = get_permissions()['scopes'], get_permissions()['email']
@@ -127,12 +146,10 @@ def main():
 
     mime_msg = get_message(service, user_id='me', msg_id=msg_ids[0])
 
-
     dl_link = get_dl_link_from_msg(mime_msg)
     resp = requests.get(url=dl_link)
     f = resp.content
-    # todo: write function to open zip, read csv, an save to AT social media.
-
+    # todo: make this a function
     #### SAVE THE ZIP FILE
     filepath = os.path.join(DIRECTORY, f'{DATE}_monthly_metrics.zip')
     if not os.path.exists(filepath):
@@ -140,7 +157,6 @@ def main():
             fp.write(f)
     else:
         print(f'{filepath} already exists')
-
 
     #### OPEN AND READ THE CSV IN THE ZIP FILE
     with ZipFile(filepath) as zf:
@@ -151,8 +167,34 @@ def main():
         with zf.open(fname) as infile:
 
             df = pd.read_csv(infile)
-    print(df)
 
+    #### WRITE THE DATA TO AIRTABLE social_media/posts_tests
+    print(df.columns)
+    # print(df.loc[0, 'Twitter Account'])
+
+    # todo: make this a function
+    for tpl in enumerate(df.index):
+        i = tpl[0]
+        fields = {
+            "fields":
+                {
+                    "post_time_gmt": str(df.loc[i, 'Date (GMT)']),
+                    "account_name": str(df.loc[i, 'Twitter Account']),
+                    "post_id": str(df.loc[i, 'Tweet ID']),
+                    "post_link": str(df.loc[i, 'Tweet Permalink']),
+                    "post_text": str(df.loc[i, 'Tweet Text']),
+                    "retweets": int(df.loc[i, 'Retweets']),
+                    "quote_tweets": int(df.loc[i, 'Quote Tweets']),
+                    "likes": int(df.loc[i, 'Likes']),
+                    "replies": int(df.loc[i, 'Replies']),
+                    "impressions": int(df.loc[i, 'Impressions']),
+                    "engagements": int(df.loc[i, 'Engagements']),
+                    "engagement_rate": float(df.loc[i, 'Engagement Rate'])
+                }
+        }
+        AT_DATA['records'] = [fields]
+        at_res = requests.post(url=END, json=AT_DATA, headers=HEADERS)
+        print(at_res.status_code)
 
 
 if __name__ == '__main__':
