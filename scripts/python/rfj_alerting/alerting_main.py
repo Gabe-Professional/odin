@@ -228,7 +228,11 @@ def run():
                         # print('MODEL CENTROIDS: \n', centroids)
 
                         pred = model.predict(X)
+<<<<<<< HEAD
                         tmp_docs_df.loc[:, 'cluster'] = pred
+=======
+                        tmp_docs_df.loc[:, 'CLUSTER'] = pred
+>>>>>>> bd6535f45e11f7c51cf8ff423e518968868dabe4
                         # print('PREDICTED CLUSTERS: \n', pred)
 
                         args = [cdist(np.reshape(np.array(centroids[idx]), newshape=(1, 2)), X).argmin() for idx in

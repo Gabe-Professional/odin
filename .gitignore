@@ -5,4 +5,11 @@ odin/__pycache__/cli.cpython-39.pyc
 */*/__pycache__/
 /.pytest_cache
 */__pycache__
+<<<<<<< HEAD
 .DS_Store
+=======
+.DS_Store
+odin/collect/build
+odin/collect/dist
+odin/collect/airtable_records.spec
+>>>>>>> bd6535f45e11f7c51cf8ff423e518968868dabe4

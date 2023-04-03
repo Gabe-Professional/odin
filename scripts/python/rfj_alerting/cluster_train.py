@@ -129,14 +129,14 @@ def run():
     pred = km[2].predict(X_test)
 
     pred_df = sample_df.iloc[test_idx]
-    pred_df.loc[:, 'cluster'] = pred
+    pred_df.loc[:, 'CLUSTER'] = pred
 
-    pred_df[['uid', 'body', 'body_language', f'{COLUMN_TITLE}', 'cluster']].to_csv('test_predictions.csv')
+    pred_df[['uid', 'body', 'body_language', f'{COLUMN_TITLE}', 'CLUSTER']].to_csv('test_predictions.csv')
     pd.set_option('display.max_rows', None)
     pd.set_option('display.max_columns', None)
 
     f, ax = plt.subplots(figsize=(10, 10))
-    plt.scatter(X_test[:, 0], X_test[:, 1], c=pred_df['cluster'])
+    plt.scatter(X_test[:, 0], X_test[:, 1], c=pred_df['CLUSTER'])
     for i in range(len(centroids)):
         plt.scatter(centroids[i][0], centroids[i][1], c='black')
         plt.annotate(text='CENTROID_{}'.format(i), xy=centroids[i])
@@ -158,7 +158,7 @@ def run():
         centroids = model.cluster_centers_
         pred = model.predict(X_test)
         pred_df = sample_df.iloc[test_idx]
-        pred_df.loc[:, 'cluster'] = pred
+        pred_df.loc[:, 'CLUSTER'] = pred
         print(pred)
 
         from scipy.spatial.distance import cdist

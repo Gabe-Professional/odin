@@ -22,4 +22,7 @@ and visualizing that data.
 # Usage
 
 # Installation
+navigate into the odin project and run 
+pip install -e . --no-deps
+
 # Contributing to ODIN
