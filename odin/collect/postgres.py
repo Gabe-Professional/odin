@@ -1,9 +1,7 @@
-<<<<<<< HEAD
 # from odin.credentials.config import get_creds
 #
 #
 # def create(cluster='DEV'):
-=======
 import json
 import logging
 import os
@@ -126,75 +124,3 @@ class Db(object):
             cursor.close()
         return data
 
-
-def format_connection_info(connection_info):
-    connection_string = f"host={connection_info['POSTGRES_HOST']} port={connection_info['POSTGRES_PORT']} " \
-                        f"dbname={connection_info['POSTGRES_DBNAME']} user={connection_info['POSTGRES_USER']} " \
-                        f"password={connection_info['POSTGRES_PASSWORD']}"
-    return connection_string
-
-
-# class DB(object):
-#
-#     def __init__(self, **connection_args):
-#
-#         try:
-#             self._conn = psycopg2.connect(**connection_args)
-#         except Exception:
-#             msg = 'The connection failed...make sure you have proper credentials'
-#             print(msg)
-#
-#     @staticmethod
-#     def Create(cluster="DEV"):
-#         creds = Credentials().get_creds(cluster=cluster)
-#         connection_info = format_connection_info(creds)
-#         return DB(**connection_info)
-#
-#     def _get_cursor(self):
-#
-#         return self._conn.cur
-
-
-# todo: need to change or delete the below
-def format_dsn(dsn: dict):
-    connection_string = f"host={dsn['POSTGRES_HOST']} port={dsn['POSTGRES_PORT']} dbname={dsn['POSTGRES_DBNAME']} " \
-                        f"user={dsn['POSTGRES_USER']} password={dsn['POSTGRES_PASSWORD']}"
-    return connection_string
-
-
-class Create:
-
-    # todo: maybe a better way to do this?
-    def __init__(self, file=os.path.expanduser('~/.cred/ODIN_CONFIG/odin_backbone_properties.json')):
-        self.file = file
-        if not os.path.exists(file):
-            print(f'The file {file} does not exist...please create the properties file with postgres credentials')
-        else:
-            print(f'Loading the creds from {file}')
-
-    def get_dsn(self, cluster='DEV'):
-        with open(self.file, 'r') as f:
-            print(f'Getting {cluster} credentials')
-            dsn = json.load(f)[cluster]
-            conn_string = format_dsn(dsn)
-
-        return dsn
-
-    # todo: need to create a function to apply to get_dsn to format the dsn data
-
-
-# class Properties():
-
-
-
-# from odin.credentials.config import get_creds
-#
-#
-# def create(CLUSTER='DEV'):
->>>>>>> bd6535f45e11f7c51cf8ff423e518968868dabe4
-#     creds = get_creds()
-#     connection_info = {}
-#     for key in ["host", "port", "dbname", "user", "password"]:
-#         try:
-#             connection_info[key] = creds[]
-#     print(creds)

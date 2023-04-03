@@ -4,7 +4,6 @@ try:
 except ImportError:
     import configparser as ConfigParser
 import logging
-<<<<<<< HEAD
 # import six
 logger = logging.getLogger(__name__)
 # import json
@@ -113,10 +112,8 @@ logger = logging.getLogger(__name__)
 #     _file = "backbone.properties"
 #     _prefix = "BACKBONE"
 #
-=======
 import six
 import json
-logger = logging.getLogger(__name__)
 
 
 class AirTable:
@@ -238,29 +235,3 @@ class BackboneProperties(Properties):
     _file = "backbone.properties"
     _prefix = "BACKBONE"
 
-
-
-# todo: get rid of this soon...
-# def get_creds_file(file_path):
-#     return file_path
-# class Properties:
-#     def __init__(self):
-#         fp = os.path.expanduser('~/.cred/ODIN_CONFIG/odin_backbone_properties.json')
-#         if not os.path.exists(fp):
-#             print(f'THE FILE {fp} DOES NOT EXIST...PLEASE SET UP YOUR CREDENTIALS')
-#         elif os.path.exists(fp):
-#             print('LOADING YOUR CREDENTIALS FILE')
-#             self.file = fp
-#             get_creds_file(self.file)
-#         else:
-#             print('SOMETHING ELSE WENT WRONG...')
-
-# class Credentials(Properties):
-#
-#     def get_creds(self, cluster):
-#         with open(Properties().file, 'r') as f:
-#             print(f'GETTING POSTGRES {cluster} CREDENTIALS')
-#             creds = json.load(f)[cluster]
-#
-#         return creds
->>>>>>> bd6535f45e11f7c51cf8ff423e518968868dabe4
