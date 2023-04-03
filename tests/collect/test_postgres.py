@@ -1,12 +1,5 @@
-<<<<<<< HEAD
 import odin.collect.postgres as pg
-
-
-def test_create():
-    pg.create(cluster='DEV')
-=======
 import logging
-
 import pandas as pd
 from odin.collect.postgres import Db
 logger = logging.getLogger(__name__)
@@ -32,7 +25,3 @@ def test_get_latest_inbound_time_from_contact():
         data = db.get_lastest_inbound_time_from_contact(contact_name=contact_name, table=table)
 
     # todo: what to assert here? data could actually be none
-
-
-
->>>>>>> bd6535f45e11f7c51cf8ff423e518968868dabe4
