@@ -5,3 +5,7 @@ odin/__pycache__/cli.cpython-39.pyc
 */*/__pycache__/
 /.pytest_cache
 */__pycache__
+.DS_Store
+odin/collect/build
+odin/collect/dist
+odin/collect/airtable_records.spec

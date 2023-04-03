@@ -25,8 +25,8 @@ def analyze_main(args):
 
         kmeans = KMeans(n_clusters=3, random_state=1).fit(X)
         clusters = kmeans.labels_
-        data['cluster'] = clusters
-        print(data[['text', 'author', 'cluster']])
+        data['CLUSTER'] = clusters
+        print(data[['text', 'author', 'CLUSTER']])
         print(len(clusters))
 
         K = range(1, 15)
@@ -40,5 +40,5 @@ def analyze_main(args):
         plt.plot(K, sosd, 'bx-')
         plt.xlabel('Cluster Count')
         plt.ylabel('Sum of Squared Distances')
-        plt.title('Elbow method for optimal cluster size')
+        plt.title('Elbow method for optimal CLUSTER size')
         plt.show()

@@ -15,8 +15,8 @@ from scipy.spatial.distance import cdist
 
 ##### SCRIPT VARIABLES
 LOG_HISTORICAL = False
-SAVE_CSV = False
-LOG_AIRTABLE = False
+SAVE_CSV = True
+LOG_AIRTABLE = True
 
 
 ##### FILE PATH VARIABLES #####
@@ -225,11 +225,11 @@ def run():
 
                         model = pickle.load(pkl)
                         centroids = model.cluster_centers_
-                        print('MODEL CENTROIDS: \n', centroids)
+                        # print('MODEL CENTROIDS: \n', centroids)
 
                         pred = model.predict(X)
-                        tmp_docs_df.loc[:, 'cluster'] = pred
-                        print('PREDICTED CLUSTERS: \n', pred)
+                        tmp_docs_df.loc[:, 'CLUSTER'] = pred
+                        # print('PREDICTED CLUSTERS: \n', pred)
 
                         args = [cdist(np.reshape(np.array(centroids[idx]), newshape=(1, 2)), X).argmin() for idx in
                                 range(centroids.shape[0])]
