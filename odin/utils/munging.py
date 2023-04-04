@@ -8,7 +8,7 @@ from nltk.stem import WordNetLemmatizer
 import scipy.linalg as la
 import re
 
-nltk.download('stopwords')
+nltk.download('stopwords', quiet=True)
 stpwords = stopwords.words('english')
 lemmatizer = WordNetLemmatizer()
 

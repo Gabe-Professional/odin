@@ -1,6 +1,6 @@
 import logging
-logger = logging.getLogger(__name__)
 from odin.credentials.config import BackboneProperties
+logger = logging.getLogger(__name__)
 
 
 def test_backbone_props():

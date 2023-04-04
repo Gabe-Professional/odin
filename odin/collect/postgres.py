@@ -10,6 +10,8 @@ import warnings
 import pandas as pd
 import psycopg2
 from odin.credentials.config import BackboneProperties
+logger = logging.getLogger(__name__)
+
 # todo: replace print functions with logger...need to figure out how it works...
 
 # todo: make this part of the class to directly apply to get_dsn
@@ -59,7 +61,9 @@ class Db(object):
 
     @staticmethod
     def Create(cluster='DEV'):
+        """Create a New instance of the database for a given Postgres Cluster"""
         # creds = Credentials().get_creds(cluster=cluster)
+        logger.info(f'Creating database connection to Postgres {cluster}')
         bp = BackboneProperties()
         connection_info = {}
         for key in ['host', 'port', 'dbname', 'user', 'password']:
@@ -73,10 +77,9 @@ class Db(object):
         return self._conn.cursor()
 
     ### QUERY FUNCTIONS ###
-    def get_messages_by_datetime(self, start_datetime, end_datetime, direction='in'):
-        """
-        Helper function for getting messages from the english engagement messages table
-        """
+    def get_messages_by_datetime(self, start_datetime, end_datetime, direction='in', pretty=True):
+        """Helper function for getting messages from the english engagement messages table"""
+        logger.info(f'Getting messages from Postgres between: {start_datetime} - {end_datetime}')
         table = "tblcApXQthi5pSGHh"
         sql = f'select "Message_ID", "Message", "DTG", "Language" from public."{table}" ' \
               f'where "Direction" in %s and "DTG" BETWEEN %s and %s'
@@ -94,6 +97,13 @@ class Db(object):
             data['message'].append(res[1])
             data['datetime'].append(res[2])
             data['language'].append(res[3])
+
+        if pretty:
+            data = pd.DataFrame(data)
+            logger.info(f'\nPretty Data: \n {data.head(n=10)}')
+        elif not pretty:
+            data = data
+            logger.info(f'\nNot Pretty Data: \n{data}')
 
         cursor.close()
         return data
