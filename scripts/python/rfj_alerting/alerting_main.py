@@ -41,7 +41,7 @@ assert os.path.exists(NAME_LABELS_FP)
 ##### QUERY VARIABLES
 ES_CREDS = oce.get_creds()
 QUERY_FP = os.path.join(f'{MAIN_DIR}', 'discover', 'dsl_queries', 'names_query.json')
-INDEX_PATTERN = 'pulse-odin'
+INDEX_PATTERN = 'pulse'
 
 ##### DATA VARIABLES
 COLUMN_TITLE = 'name_label'
