@@ -1,0 +1,28 @@
+{
+"query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "query": "norm.body: (\"biden\" OR \"nato\")",
+            "analyze_wildcard": true,
+            "time_zone": "Europe/London"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "range": {
+            "norm.timestamp": {
+              "format": "strict_date_optional_time",
+              "gte": "2022-07-08T00:00:00.000Z",
+              "lte": "2022-07-09T00:00:00.000Z"
+            }
+          }
+        }
+      ],
+      "should": [],
+      "must_not": []
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+"query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "query": "",
+            "analyze_wildcard": true,
+            "time_zone": ""
+          }
+        }
+      ],
+      "filter": [
+        {
+          "range": {
+            "norm.timestamp": {
+              "format": "strict_date_optional_time",
+              "gte": "",
+              "lte": ""
+            }
+          }
+        }
+      ],
+      "should": [],
+      "must_not": []
+    }
+  }
+}

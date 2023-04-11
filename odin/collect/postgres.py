@@ -73,6 +73,7 @@ class Db(object):
                 warnings.warn(AdminDBWarning(f'Could not load {key} from Credentials. Proceeding...'))
         return Db(**connection_info)
 
+    # todo: fix cursor spelling
     def _get_cusor(self):
         return self._conn.cursor()
 

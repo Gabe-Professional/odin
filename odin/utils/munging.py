@@ -82,7 +82,6 @@ REWARD_OFFER_NAMES_DICT = {name: name for name in REWARD_OFFER_NAMES}
 ORGANIZATION_NAMES_DICT = {re.sub(pattern="[^A-Za-z0-9 ]+", repl='', string=org): org for org in ORGANIZATION_NAMES}
 
 
-# todo: need to move munging stuff to utils directory
 def clean_data(data, drop_duplicate_uids=True):
     # todo: add argument to import list of desired attributes
 
@@ -182,10 +181,16 @@ def change_query_datetime(start_time, end_time, query_path):
 
 
 def parse_vector_string(vector_string):
-    try:
-        vl = vector_string.replace('[', '').replace(']', '').replace(',', '').split()
-        vl = list(float(i) for i in vl)
-    except:
+
+    if type(vector_string) == str:
+        try:
+            vl = vector_string.replace('[', '').replace(']', '').replace(',', '').split()
+            vl = list(float(i) for i in vl)
+        except:
+            vl = None
+    elif type(vector_string) == list:
+        vl = vector_string
+    else:
         vl = None
     return vl
 

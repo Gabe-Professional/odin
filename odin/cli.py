@@ -22,6 +22,7 @@ class bcolors:
 class ValidationException(Exception):
     pass
 
+
 def pass_message(msg):
     return "{}".format(msg)+"."*5+"{}PASSED{}".format(bcolors.OKGREEN,bcolors.ENDC)
 

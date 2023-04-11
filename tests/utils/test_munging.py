@@ -48,6 +48,11 @@ def test_label_text_from_dict(name_labels, names_data_csv):
 
 
 def test_parse_vector_string(names_data_csv):
+
+    # todo: generalize this test and function better.
     df = pd.read_csv(names_data_csv)
     vl = oum.parse_vector_string(df.loc[0, 'labse_encoding'])
+
+    assert type(vl) == list
+    assert type(vl[0]) == float
 

@@ -8,6 +8,10 @@ def query_path():
 
 
 @pytest.fixture
+def elasticsearch_query_path():
+    return os.path.join(os.path.dirname(__file__), 'query', 'test_elasticsearch_query.json')
+
+@pytest.fixture
 def start_time():
     return "2022-12-09T00:00:00.000Z"
 
