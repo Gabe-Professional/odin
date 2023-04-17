@@ -26,3 +26,12 @@ navigate into the odin project and run
 pip install -e . --no-deps
 
 # Contributing to ODIN
+
+
+## Development
+**notes**
+
+1. Making tests for all Odin functions 
+2. Running tests before pushing and merging
+test naming conventions 
+3. docstrings for function descriptions

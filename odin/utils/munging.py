@@ -290,3 +290,5 @@ def label_text_from_dict(document_text: str, label_dict=None):
                 hits.append(False)
     hits = np.array(list(label_dict.values()))[hits].tolist()
     return hits
+
+

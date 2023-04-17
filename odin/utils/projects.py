@@ -42,3 +42,10 @@ def setup_project_directory(directory, subdirs=None):
                 logger.info(f'Directory {d} already exists...continuing')
 
     return dirs
+
+
+def project_main(args):
+    directory = args.project_directory
+    subdirs = args.sub_dirs
+    dirs = setup_project_directory(directory=directory, subdirs=subdirs)
+    # todo: make a meta file for project main arg parse to track datetimes
