@@ -153,7 +153,7 @@ class Db(object):
     def Create(cluster='DEV'):
         """Create a New instance of the database for a given Postgres Cluster"""
         # creds = Credentials().get_creds(cluster=cluster)
-        logger.info(f'Creating database connection to Postgres {cluster}')
+        logger.info(f'Creating database connection to Elastic {cluster}')
         bp = BackboneProperties()
         connection_info = {}
         for key in ['username', 'password', 'endpoint']:

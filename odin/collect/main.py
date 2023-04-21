@@ -41,8 +41,11 @@ def collect_main(args):
     data = {}
     if database == 'postgres':
         with PG.Create(cluster) as db:
+
             data = db.get_messages_by_datetime(start_datetime=start_time, end_datetime=end_time,
                                                direction=direction, pretty=True)
+
+            # todo: add saving or showing pretty data to demo...
 
     elif database == 'elastic':
         if not keywords:
@@ -52,6 +55,9 @@ def collect_main(args):
         else:
             query = build_body_kw_query(keywords=keywords, start_time=start_time, end_time=end_time)
             with ES.Create(cluster) as db:
+                # todo: need to troubleshoot...returning same number or results for different end dates...
+                count = db.count(query=query, index_pattern='pulse')
+                logger.info(f'GETTING {count} RESULTS FROM ELASTICSEARCH')
                 data = db.query(query=query, index_pattern='pulse', batch_size=1000)
                 # todo: should get rid of the pretty parameter and always use the function...
                 df = make_pretty_df(data)
