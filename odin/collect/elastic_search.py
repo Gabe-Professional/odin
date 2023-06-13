@@ -82,7 +82,7 @@ def make_pretty_df(data, fields=[]):
     labse_fields = ['clean_text_length', 'encoding']
 
     if len(fields) == 0:
-        fields = ['uid', 'timestamp', 'author', 'body', 'domain', 'encoding']
+        fields = ['uid', 'timestamp', 'author', 'body', 'domain', 'encoding', 'url']
         tmp = {f: [] for f in fields}
         logger.info(f'No fields provided, setting to default: {fields}')
 

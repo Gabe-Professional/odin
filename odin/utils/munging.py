@@ -7,6 +7,10 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import scipy.linalg as la
 import re
+from odin.collect.elastic_search import Db, build_body_kw_query, make_pretty_df
+from datetime import timedelta
+import datetime
+
 
 nltk.download('stopwords', quiet=True)
 stpwords = stopwords.words('english')
@@ -292,3 +296,77 @@ def label_text_from_dict(document_text: str, label_dict=None):
     return hits
 
 
+def make_labeled_df(df: pd.DataFrame, labels_dict):
+    # get the results with multiple hits
+    df.loc[:, 'keyword_label'] = df['body'].apply(lambda x: label_text_from_dict(document_text=x, label_dict=labels_dict))
+    mult_df = df.loc[df['keyword_label'].map(len) > 1]
+
+    if len(mult_df) > 0:
+        mult_df.loc[:, 'keyword_label'] = mult_df.loc[:, 'keyword_label'].apply(lambda x: x[1])
+        df.loc[:, 'keyword_label'] = df.loc[:, 'keyword_label'].apply(lambda x: x[0] if len(x) != 0 else None)
+        df = pd.DataFrame(pd.concat([df, mult_df]))
+    else:
+        df.loc[:, 'keyword_label'] = df.loc[:, 'keyword_label'].apply(lambda x: x[0] if len(x) != 0 else None)
+
+    df = df.drop_duplicates(subset=['uid', 'keyword_label']).reset_index(drop=True)
+    return df
+
+
+# todo: should break this into more than one function...
+def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dict):
+    counts_pkl = os.path.join(project_dirs['data'], 'daily_counts.pkl')
+
+    end = pd.to_datetime(str(datetime.datetime.now().date())) + timedelta(seconds=-1)
+    et = end.isoformat() + str('.999Z')
+    get_data = False
+
+    if os.path.exists(counts_pkl):
+        df = pd.read_pickle(counts_pkl)
+        last = df['date'].tolist()[-1]
+
+        if last != end.date():
+            st = str((last + timedelta(days=1))) + str('T00:00:00.000Z')
+            get_data = True
+        else:
+            st = last.isoformat() + str('T00:00:00.000Z')
+            print(f'{fname} is up to date!! Latest date logged: {last}')
+    else:
+        df = pd.DataFrame()
+        get_data = True
+        st = end + timedelta(days=-100)
+        et = (end + timedelta(seconds=-1)).isoformat() + str('.999Z')
+        tmp = pd.DataFrame()
+
+    if get_data:
+        if len(keywords) != 0:
+
+            query = build_body_kw_query(keywords=keywords, start_time=st, end_time=et)
+            with Db.Create('PROD') as es:
+
+                count = es.count(query=query, index_pattern='pulse')
+                print(f'GETTING ELASTICSEARCH DATA: {count} results between {st} - {et}')
+                data = es.query(index_pattern='pulse', query=query)
+                tmp = make_pretty_df(data)
+
+            tmp = make_labeled_df(tmp, labels_dict=labels_dict)
+
+            pd.set_option('display.max_columns', None)
+            tmp['date'] = pd.to_datetime(tmp['timestamp']).dt.date
+
+            # counts = tmp.groupby(by=['date',
+            #                          'keyword_label']).uid.count().reset_index().rename(
+            #     columns={'uid': 'count'}).sort_values('date')
+
+            # todo: sum the vector here...no reason to have to do it later...
+            # todo: also can get the body length here...
+            counts = tmp.groupby(by=[
+                'date',
+                'keyword_label']).agg({'uid': 'count',
+                                       'encoding': lambda x: [np.array(a) for a in x],
+                                       'body': lambda x: list(x)}).reset_index().rename(columns={'uid':
+                                                                                                 'count'})
+
+            df = pd.DataFrame(pd.concat([df, counts]).reset_index(drop=True))
+            df.to_pickle(counts_pkl)
+
+    return df, st, et

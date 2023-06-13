@@ -11,6 +11,11 @@ from sklearn.model_selection import train_test_split
 import pickle
 import requests as req
 import json
+from odin.utils.projects import setup_project_directory
+from odin.collect.elastic_search import Db, build_body_kw_query, make_pretty_df
+from odin.utils.munging import parse_vector_string, label_text_from_dict, make_labeled_df
+
+from odin.utils.munging import REWARD_OFFER_NAMES
 
 
 ### AIRTABLE VARIABLES
@@ -36,77 +41,88 @@ COLUMN_TITLE = 'name_label'
 res = req.get(url=END, headers=HEADERS)
 SUCCESS_DATES = [rec['fields']['query_date'] for rec in res.json()['records']]
 ENTRIES = [(rec['fields']['name_label'], rec['fields']['query_date']) for rec in res.json()['records']]
-PKL_FP = 'kmeans_model.pkl'
+
 SAMPLE_SIZE = 1000
 
 
 def run():
-    tmp = pd.read_csv(os.path.join(DATA_DIR, 'labels', 'name_labels.csv'))
 
-    for idx in range(len(tmp)):
-        key, label = tmp.iloc[idx, :]['name'], tmp.iloc[idx, :]['label']
-        LABELS_DICT[key] = label
+    # DEFINE VARIABLES
+    PROJECT_DIRECTORY = '~/projects/odin/rfj_alerting_app'
 
-    files = [f for f in glob.glob(os.path.join(DATA_DIR, '*.csv')) if 'daily_counts' not in f]
+    KEYWORDS = REWARD_OFFER_NAMES
+    LABELS_DF = pd.read_csv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+                                         'odin', 'data', 'name_labels.csv'))
 
-    print('READING THE FILES TO TRAIN ON...')
-    df = pd.concat(map(pd.read_csv, files)).drop_duplicates(subset=['uid', 'timestamp']).reset_index(drop=True)
-    df[f'{COLUMN_TITLE}'] = df['body'].apply(lambda x: oum.label_text_from_dict(document_text=x, label_dict=LABELS_DICT))
+    LABELS_DICT = {LABELS_DF.iloc[idx, :]['name']: LABELS_DF.iloc[idx, :]['label'] for idx in range(len(LABELS_DF))}
 
-    #### MAKE A SECOND DATAFRAME WITH MENTIONS OF MULTIPLE RO SUBJECTS
-    mult_df = df.loc[df[f'{COLUMN_TITLE}'].map(len) > 1]
+    DIRS = setup_project_directory(PROJECT_DIRECTORY)
+    TRAIN_DATA_PKL = os.path.join(DIRS['data'], 'train_data.pkl')
+    CLUSTER_PKL_FP = os.path.join(DIRS['data'], 'kmeans_model.pkl')
 
-    #### RENAME THE RO SUBJECT AS FIRST ENTRY IN DF AND SECOND ENTRY IN MULT_DF
-    df[f'{COLUMN_TITLE}'] = df.loc[:, f'{COLUMN_TITLE}'].apply(lambda x: x[0] if len(x) > 0 else x)
-    mult_df.loc[:, f'{COLUMN_TITLE}'] = mult_df.loc[:, f'{COLUMN_TITLE}'].apply(lambda x: x[1])
+    counts_df = pd.read_csv(os.path.join(DIRS['data'], 'daily_counts.csv'))
+    alert_dates = counts_df.loc[counts_df['alert?'] == 1]['date'].unique().tolist()
+    alert_kwds = counts_df.loc[counts_df['alert?'] == 1]['keyword_label'].unique().tolist()
 
-    #### COMBINE THE DATAFRAMES TO GET THE SINGLE RO SUBJECT MENTIONS
-    df = pd.concat([df, mult_df]).reset_index(drop=True)
-    df['date'] = pd.to_datetime(df['timestamp'], errors='coerce').dt.date
+    if not os.path.exists(TRAIN_DATA_PKL):
+        # GET THE TRAINING DATA
+        st = str(counts_df['date'].tolist()[0]) + 'T00:00:00.000Z'
+        et = str(counts_df['date'].tolist()[-1]) + 'T00:00:00.000Z'
+        fp = os.path.join(DIRS['data'], f'{st}_{et}_elastic_search.csv')
+        if not os.path.exists(fp):
+            query = build_body_kw_query(KEYWORDS, start_time=st, end_time=et)
+            with Db.Create('PROD') as es:
+                count = es.count(query=query, index_pattern='pulse')
+                print(f'GETTING ELASTICSEARCH DATA: {count} results between {st} - {et}')
+                data = es.query(query=query, index_pattern='pulse')
+                results_df = make_pretty_df(data)
+                results_df.to_csv(fp, index=False)
+                print(f'Saving results to {fp}')
+        else:
+            results_df = pd.read_csv(fp)
 
-    dates = pd.to_datetime(list(zip(*ENTRIES))[1]).date
-    labels = list(zip(*ENTRIES))[0]
+        # DO SOME DATA MANIPULATION
+        results_df = results_df.loc[results_df['domain'] != 'twitter.com'].drop_duplicates(subset='uid')
+        results_df['ln_body_length'] = np.log(results_df.loc[:, 'body'].apply(lambda x: len(x)))
+        results_df = make_labeled_df(results_df, labels_dict=LABELS_DICT)
+        results_df['date'] = pd.to_datetime(results_df['timestamp']).dt.date.apply(lambda x: str(x))
+        results_df.loc[:, 'encoding'] = results_df['encoding'].apply(lambda x: parse_vector_string(x))
+        results_df = results_df.loc[results_df['encoding'].notna()]
 
-    #### MAKE THE LABSE TRAINING DATASET
-    df = df.loc[df[f'{COLUMN_TITLE}'].map(len) > 0]
-    sample_df = df.loc[(df.loc[:, 'date'].isin(dates)) & (df.loc[:, f'{COLUMN_TITLE}'].isin(labels))]
-    sample_df = sample_df.drop_duplicates(subset='labse_encoding').reset_index(drop=True)
+        print(results_df.columns)
+        sample_df = results_df.loc[(results_df['date'].isin(alert_dates)) &
+                                   (results_df['keyword_label'].isin(alert_kwds))].sample(n=SAMPLE_SIZE,
+                                                                                          random_state=0)\
+            .reset_index(drop=True)
+        sample_df.to_csv(os.path.join(DIRS['data'], 'training_sample.csv'), index=False)
 
-    sample_df.loc[:, 'labse_encoding'] = sample_df.loc[:, 'labse_encoding'].apply(lambda x: oum.parse_vector_string(x))
-    sample_df = sample_df.dropna(subset=['follower_count'])
-    # sample_df.loc[:, 'follower_count'] = sample_df.loc[:, 'follower_count'].astype(float).replace(to_replace=0, value=0.0001)
-    sample_df = sample_df.loc[sample_df.loc[:, 'follower_count'] > 0]
-    sample_df = sample_df.loc[sample_df.loc[:, 'labse_encoding'].map(type) == list].sample(n=SAMPLE_SIZE, random_state=0).reset_index(drop=True)
+        #### DEFINE THE FEATURES FOR CLUSTERING
+        X = np.array(sample_df.loc[:, 'encoding'].tolist())
+        X = np.reshape(np.sum(X, axis=1), newshape=(X.shape[0], 1))
+        X = np.append(X, np.reshape(list(sample_df.loc[:, 'ln_body_length']), newshape=(X.shape[0], 1)), axis=1)
+        X = np.append(X, np.reshape(list(np.array(sample_df.index)), newshape=(X.shape[0], 1)), axis=1)
 
-    sample_df.loc[:, 'follower_count'] = np.log(sample_df.loc[:, 'follower_count'])
-    print(sample_df.head(10))
-    print('TOTAL DATA POINTS TO TRAIN ON: ', len(sample_df), len(df))
+        with open(TRAIN_DATA_PKL, 'wb') as pkl:
+            pickle.dump(X, pkl)
 
-    #### GET THE FEATURES
-    X = np.array(sample_df.loc[:, 'labse_encoding'].tolist())
-    X = np.reshape(np.sum(X, axis=1), newshape=(X.shape[0], 1))
-    X = np.append(X, np.reshape(list(sample_df.loc[:, 'follower_count']), newshape=(X.shape[0], 1)), axis=1)
+    elif os.path.exists(TRAIN_DATA_PKL):
+        with open(TRAIN_DATA_PKL, 'rb') as pkl:
+            print('loading training features from pkl')
+            X = pickle.load(pkl)
+    sample_df = pd.read_csv(os.path.join(DIRS['data'], 'training_sample.csv'))
 
-    sample_df['labse_sum'] = X[:, 0]
-    sample_df['ln_follower_count'] = X[:, 1]
+    #### TRAIN A CLUSTERING MODEL FOR THE DAYS KEYWORDS ALERTED ON...
+    #
+    # f, ax = plt.subplots(nrows=2, figsize=(10, 10))
+    # ax[0].hist(X[:, 0], ec='w')
+    # ax[1].hist(X[:, 1], ec='w')
 
-    idx = np.array(sample_df.index.tolist())
-    print('THE SHAPE OF THE DATA SET IS: ', X.shape)
-
-    X_train, X_test, train_idx, test_idx = train_test_split(X, idx, test_size=.3, shuffle=False)
-
+    X_train, X_test, train_idx, test_idx = train_test_split(X[:, 0:2], X[:, 2], test_size=.3, shuffle=False)
     f, ax = plt.subplots(figsize=(10, 10))
     plt.scatter(X_train[:, 0], X_train[:, 1])
-    plt.title(f'TRAINING DATA SCATTER (TWITTER ONLY), n={len(train_idx)}')
-    plt.xlabel('LABSE SUM')
-    plt.ylabel('LN FOLLOWER COUNT')
-    plt.grid()
-    plt.tight_layout()
-    f.savefig('training_scatter.png')
 
     Ks = list(range(1, 10))
     km = [KMeans(n_clusters=i, random_state=0) for i in Ks]
-
     res_data = {}
 
     f, ax = plt.subplots(figsize=(10, 10))
@@ -116,27 +132,33 @@ def run():
         sse = km[i].inertia_
         res_data[clusters] = sse
 
-    centroids = km[2].cluster_centers_
+    centroids = km[1].cluster_centers_
     print('CENTORIDS LOCATED AT: \n', centroids)
     print('SSE RESULTS FOR K CLUSTERS: \n', res_data)
     plt.plot(res_data.keys(), res_data.values())
-    plt.title('NUMBER OF CLUSTERS VS. SSE (TWITTER ONLY)')
+    plt.title('NUMBER OF CLUSTERS VS. SSE')
     plt.grid()
     plt.xlabel('CLUSTERS')
     plt.ylabel('SSE')
     plt.tight_layout()
-    f.savefig('elbow_method_training_results.png')
-    pred = km[2].predict(X_test)
 
+    pred = km[1].predict(X_test)
+
+    # todo: Start here
+    # todo: need to keep the sample data to load the predictions here...
     pred_df = sample_df.iloc[test_idx]
     pred_df.loc[:, 'CLUSTER'] = pred
 
-    pred_df[['uid', 'body', 'body_language', f'{COLUMN_TITLE}', 'CLUSTER']].to_csv('test_predictions.csv')
+
+
+
+    # pred_df[['uid', 'body', 'body_language', f'{COLUMN_TITLE}', 'CLUSTER']].to_csv('test_predictions.csv')
     pd.set_option('display.max_rows', None)
     pd.set_option('display.max_columns', None)
 
     f, ax = plt.subplots(figsize=(10, 10))
     plt.scatter(X_test[:, 0], X_test[:, 1], c=pred_df['CLUSTER'])
+
     for i in range(len(centroids)):
         plt.scatter(centroids[i][0], centroids[i][1], c='black')
         plt.annotate(text='CENTROID_{}'.format(i), xy=centroids[i])
@@ -147,13 +169,13 @@ def run():
     plt.grid()
     plt.tight_layout()
 
-    f.savefig('test_scatter.png')
+    # f.savefig('test_scatter.png')
     #### SAVE THE MODEL AS A PKL
-    with open(f'{PKL_FP}', 'wb') as model_pkl:
-        pickle.dump(km[2], model_pkl)
+    with open(f'{CLUSTER_PKL_FP}', 'wb') as model_pkl:
+        pickle.dump(km[1], model_pkl)
 
     #### OPEN THE PKL AND TEST SOME DATA
-    with open(f'{PKL_FP}', 'rb') as pkl:
+    with open(f'{CLUSTER_PKL_FP}', 'rb') as pkl:
         model = pickle.load(pkl)
         centroids = model.cluster_centers_
         pred = model.predict(X_test)
@@ -165,9 +187,105 @@ def run():
         print(np.reshape(np.array(centroids[0]), newshape=(1, 2)))
 
         args = [cdist(np.reshape(np.array(centroids[idx]), newshape=(1, 2)), X_train).argmin() for idx in range(centroids.shape[0])]
+
         c_docs = sample_df.iloc[args]
         print(c_docs.body.tolist())
 
+        exit()
+
+
+    ##### SAVE THIS STUFF FOR LATER ####
+
+    # for idx in range(len(tmp)):
+    #     key, label = tmp.iloc[idx, :]['name'], tmp.iloc[idx, :]['label']
+    #     LABELS_DICT[key] = label
+    #
+    # files = [f for f in glob.glob(os.path.join(DATA_DIR, '*.csv')) if 'daily_counts' not in f]
+
+    # print('READING THE FILES TO TRAIN ON...')
+    # df = pd.concat(map(pd.read_csv, files)).drop_duplicates(subset=['uid', 'timestamp']).reset_index(drop=True)
+    # df[f'{COLUMN_TITLE}'] = df['body'].apply(lambda x: oum.label_text_from_dict(document_text=x, label_dict=LABELS_DICT))
+
+    #### MAKE A SECOND DATAFRAME WITH MENTIONS OF MULTIPLE RO SUBJECTS
+    # mult_df = df.loc[df[f'{COLUMN_TITLE}'].map(len) > 1]
+
+    #### RENAME THE RO SUBJECT AS FIRST ENTRY IN DF AND SECOND ENTRY IN MULT_DF
+    # df[f'{COLUMN_TITLE}'] = df.loc[:, f'{COLUMN_TITLE}'].apply(lambda x: x[0] if len(x) > 0 else x)
+    # mult_df.loc[:, f'{COLUMN_TITLE}'] = mult_df.loc[:, f'{COLUMN_TITLE}'].apply(lambda x: x[1])
+
+    #### COMBINE THE DATAFRAMES TO GET THE SINGLE RO SUBJECT MENTIONS
+    # df = pd.concat([df, mult_df]).reset_index(drop=True)
+    # df['date'] = pd.to_datetime(df['timestamp'], errors='coerce').dt.date
+
+    # dates = pd.to_datetime(list(zip(*ENTRIES))[1]).date
+    # labels = list(zip(*ENTRIES))[0]
+
+    #### MAKE THE LABSE TRAINING DATASET
+    # df = df.loc[df[f'{COLUMN_TITLE}'].map(len) > 0]
+    # sample_df = df.loc[(df.loc[:, 'date'].isin(dates)) & (df.loc[:, f'{COLUMN_TITLE}'].isin(labels))]
+    # sample_df = sample_df.drop_duplicates(subset='labse_encoding').reset_index(drop=True)
+
+    # sample_df.loc[:, 'labse_encoding'] = sample_df.loc[:, 'labse_encoding'].apply(lambda x: oum.parse_vector_string(x))
+    # sample_df = sample_df.dropna(subset=['follower_count'])
+    # # sample_df.loc[:, 'follower_count'] = sample_df.loc[:, 'follower_count'].astype(float).replace(to_replace=0, value=0.0001)
+
+    # sample_df = sample_df.loc[sample_df.loc[:, 'follower_count'] > 0]
+    #     sample_df = sample_df.loc[sample_df.loc[:, 'labse_encoding'].map(type) == list].sample(n=SAMPLE_SIZE, random_state=0).reset_index(drop=True)
+
+    #     sample_df.loc[:, 'follower_count'] = np.log(sample_df.loc[:, 'follower_count'])
+    #     print(sample_df.head(10))
+    #     print('TOTAL DATA POINTS TO TRAIN ON: ', len(sample_df), len(df))
+    #
+    #     #### GET THE FEATURES
+    #     X = np.array(sample_df.loc[:, 'labse_encoding'].tolist())
+    #     X = np.reshape(np.sum(X, axis=1), newshape=(X.shape[0], 1))
+    #     X = np.append(X, np.reshape(list(sample_df.loc[:, 'follower_count']), newshape=(X.shape[0], 1)), axis=1)
+
+    # sample_df['labse_sum'] = X[:, 0]
+    #     sample_df['ln_follower_count'] = X[:, 1]
+    #
+    #     idx = np.array(sample_df.index.tolist())
+    #     print('THE SHAPE OF THE DATA SET IS: ', X.shape)
+    #
+    #     X_train, X_test, train_idx, test_idx = train_test_split(X, idx, test_size=.3, shuffle=False)
+    #
+    #     f, ax = plt.subplots(figsize=(10, 10))
+    #     plt.scatter(X_train[:, 0], X_train[:, 1])
+    #     plt.title(f'TRAINING DATA SCATTER (TWITTER ONLY), n={len(train_idx)}')
+    #     plt.xlabel('LABSE SUM')
+    #     plt.ylabel('LN FOLLOWER COUNT')
+    #     plt.grid()
+    #     plt.tight_layout()
+    #     f.savefig('training_scatter.png')
+    #
+    #     Ks = list(range(1, 10))
+    #     km = [KMeans(n_clusters=i, random_state=0) for i in Ks]
+    #
+    #     res_data = {}
+    #
+    #     f, ax = plt.subplots(figsize=(10, 10))
+    #     for i in range(len(km)):
+    #         clusters = Ks[i]
+    #         km[i].fit(X_train)
+    #         sse = km[i].inertia_
+    #         res_data[clusters] = sse
+    #
+    #     centroids = km[2].cluster_centers_
+    #     print('CENTORIDS LOCATED AT: \n', centroids)
+    #     print('SSE RESULTS FOR K CLUSTERS: \n', res_data)
+    #     plt.plot(res_data.keys(), res_data.values())
+    #     plt.title('NUMBER OF CLUSTERS VS. SSE (TWITTER ONLY)')
+    #     plt.grid()
+    #     plt.xlabel('CLUSTERS')
+    #     plt.ylabel('SSE')
+    #     plt.tight_layout()
+    #     f.savefig('elbow_method_training_results.png')
+    #     pred = km[2].predict(X_test)
+    #
+    #     pred_df = sample_df.iloc[test_idx]
+    #     pred_df.loc[:, 'CLUSTER'] = pred
 
 if __name__ == '__main__':
     run()
+
+

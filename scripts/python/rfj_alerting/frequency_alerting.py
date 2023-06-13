@@ -6,13 +6,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import requests
-
+import pickle
 from odin.utils.munging import REWARD_OFFER_NAMES
 from odin.utils.airtable import make_records_dict, get_alerting_creds
-from odin.utils.munging import parse_vector_string, label_text_from_dict
+from odin.utils.munging import parse_vector_string, make_labeled_df
 from odin.collect.elastic_search import Db, build_body_kw_query, make_pretty_df
 from odin.utils.projects import setup_project_directory
 import scipy.stats as stats
+from scipy.spatial.distance import cdist
+
 
 
 # THIS SCRIPT SHOULD
@@ -60,28 +62,23 @@ def conf_intervals_from_category(df: pd.DataFrame, value, log=True):
     return conf
 
 
-# todo: work out conditionally getting the counts csv...
 def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dict):
-    counts_csv = os.path.join(project_dirs['data'], fname)
-    # end = pd.to_datetime(str((datetime.datetime.now().date() + timedelta(seconds=-1))))
+    counts_pkl = os.path.join(project_dirs['data'], 'daily_counts.pkl')
+
     end = pd.to_datetime(str(datetime.datetime.now().date())) + timedelta(seconds=-1)
     et = end.isoformat() + str('.999Z')
-    cols = ['date', 'keyword_label', 'count']
-
     get_data = False
 
-    if os.path.exists(counts_csv):
-        df = pd.read_csv(counts_csv, usecols=cols)
-        with open(counts_csv, 'r') as f:
-            lines = f.readlines()
-            last = pd.to_datetime(lines[-1].split(',')[0])
+    if os.path.exists(counts_pkl):
+        df = pd.read_pickle(counts_pkl)
+        last = df['date'].tolist()[-1]
 
-            if last.date() != end.date():
-                st = str((last + timedelta(days=1)).date()) + str('T00:00:00.000Z')
-                get_data = True
-            else:
-                st = last.isoformat() + str('.000Z')
-                print(f'{fname} is up to date!! Latest date logged: {last}')
+        if last != end.date():
+            st = str((last + timedelta(days=1))) + str('T00:00:00.000Z')
+            get_data = True
+        else:
+            st = last.isoformat() + str('T00:00:00.000Z')
+            print(f'{fname} is up to date!! Latest date logged: {last}')
     else:
         df = pd.DataFrame()
         get_data = True
@@ -99,22 +96,25 @@ def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dic
                 data = es.query(index_pattern='pulse', query=query)
                 tmp = make_pretty_df(data)
 
-            tmp['keyword_label'] = tmp['body'].apply(lambda x: label_text_from_dict(document_text=x,
-                                                                                    label_dict=labels_dict))
-            mult_df = tmp.loc[tmp['keyword_label'].map(len) > 1]
-            mult_df.loc[:, 'keyword_label'] = mult_df.loc[:, 'keyword_label'].apply(lambda x: x[1])
-            tmp.loc[:, 'keyword_label'] = tmp.loc[:, 'keyword_label'].apply(lambda x: x[0] if len(x) != 0 else None)
-            tmp = pd.DataFrame(pd.concat([tmp, mult_df])).reset_index(drop=True).drop_duplicates(subset=['uid',
-                                                                                                         'keyword_label'])
+            tmp = make_labeled_df(tmp, labels_dict=labels_dict)
 
             pd.set_option('display.max_columns', None)
             tmp['date'] = pd.to_datetime(tmp['timestamp']).dt.date
-            counts = tmp.groupby(by=['date',
-                                     'keyword_label']).uid.count().reset_index().rename(
-                columns={'uid': 'count'}).sort_values('date')
+            # counts = tmp.groupby(by=['date',
+            #                          'keyword_label']).uid.count().reset_index().rename(
+            #     columns={'uid': 'count'}).sort_values('date')
+
+            # todo: sum the vector here...no reason to have to do it later...
+            # todo: also can get the body length here...
+            counts = tmp.groupby(by=[
+                'date',
+                'keyword_label']).agg({'uid': 'count',
+                                       'encoding': lambda x: [sum(a) if a is not None else 0 for a in x],
+                                       'body': lambda x: list(x),
+                                       'url': lambda x: list(x)}).reset_index().rename(columns={'uid': 'count'})
 
             df = pd.DataFrame(pd.concat([df, counts]).reset_index(drop=True))
-            df.to_csv(counts_csv, index=False)
+            df.to_pickle(counts_pkl)
 
     return df, st, et
 
@@ -130,8 +130,6 @@ def make_conf_dict(counts_df: pd.DataFrame, project_dirs, plot=False):
         tmp = pd.DataFrame(counts_df.loc[(counts_df['keyword_label'] == lab) & (counts_df['count'] > 0)])
         if len(tmp) >= size:
             tmp = tmp.sample(n=size, random_state=1)
-            # todo: download more historical data???
-            # todo: change log to LN
             log_count = np.log(tmp['count'])
             dates = tmp['date']
             mu = np.mean(log_count)
@@ -200,12 +198,14 @@ def show_results(row):
 
 
 def log_at_results(result):
-    at_cols = ['query_date', "document_count", "LN_document_count", "name_label"]
-    count = result['count']
+    at_cols = ['query_date', "document_count", "LN_document_count", "name_label", "cluster_center_doc", "urls"]
+    count = result['document_count']
     ln_count = np.log(count)
-    label = result['keyword_label']
-    date = str(result['date'])
+    label = result['name_label']
+    date = result['query_date']
+    urls = result['urls']
     alert = result['alert?']
+    center_doc = result['cluster_center_docs']
     at_records_dict = make_records_dict(at_cols)
     at_creds = get_alerting_creds()
     end_point = f'https://api.airtable.com/v0/{at_creds["base_id"]}/{at_creds["table_name"]}'
@@ -215,6 +215,8 @@ def log_at_results(result):
     at_records_dict['records'][0]['fields']['document_count'] = count
     at_records_dict['records'][0]['fields']['LN_document_count'] = ln_count
     at_records_dict['records'][0]['fields']['name_label'] = label
+    at_records_dict['records'][0]['fields']['cluster_center_doc'] = center_doc
+    at_records_dict['records'][0]['fields']['urls'] = urls
     res = requests.post(url=end_point, json=at_records_dict, headers=headers)
     print('AIRTABLE STATUS CODE:', res.status_code)
 
@@ -229,10 +231,6 @@ def main():
     PROJECT_DIRECTORY = '~/projects/odin/rfj_alerting_app'
 
     NEW_DATE = (datetime.datetime.now() + timedelta(days=-1)).date()
-
-    # START_DATE = END_DATE + timedelta(days=-30)
-    # INDEX_PATTERN = 'pulse'
-    # CLUSTER = 'PROD'
     PLOT = False
 
     project_dirs = setup_project_directory(PROJECT_DIRECTORY)
@@ -240,10 +238,12 @@ def main():
                                          fname='daily_counts.csv',
                                          keywords=KEYWORDS,
                                          labels_dict=LABELS_DICT)
+    # counts_df = counts_df.rename(columns={'uid': 'count'})
+    pd.set_option('display.max_columns', None)
 
+    # MAKE A LIST OF DATES TO LOG GREATER THAN OR EQUAL TO THE START QUERY TIME
     log_dates = pd.to_datetime(counts_df['date']).dt.date
     log_dates = [str(d) for d in log_dates.loc[log_dates >= pd.to_datetime(st).date()].unique().tolist()]
-
     # MAKE THE CONFIDENCE INTERVALS...SAMPLE THE COUNTS DATA FOR 30 DAYS OF EACH KEYWORD...AS TIME GOES ON,
     # THE OBSERVATIONS WILL INCREASE AND (EVENTUALLY) ALL HAVE AT LEAST 30
     conf_dict = make_conf_dict(counts_df, project_dirs=project_dirs, plot=PLOT)
@@ -251,23 +251,67 @@ def main():
     ## ASSESS THE FREQUENCIES OF NEW DOCUMENT COUNTS (YESTERDAY)
     counts_df.loc[:, 'alert?'] = counts_df.apply(lambda row: assess_freq(row['keyword_label'],
                                                                          row['count'], conf_dict=conf_dict), axis=1)
+    counts_df = counts_df.sort_values(by=['date', 'keyword_label'])
+
+    # todo: if the path doesn't exist...
+    # todo: this main function may need some revamping...
+    counts_df.to_pickle(os.path.join(project_dirs['data'], 'daily_counts.pkl'))
 
     tmp = pd.DataFrame(counts_df.loc[(counts_df['date'].isin(log_dates)) |
                                      (counts_df['date'].isin(pd.to_datetime(log_dates).date))])
 
     # LOG ALERTING RESULTS INTO AIRTABLE
-    # todo: logging alerting results only for now...add clustering results soon
+    # CLUSTER THE ALERTING RESULTS OR ALL RESULTS?
+    pd.set_option('display.max_columns', None)
+    # tmp = counts_df.loc[counts_df['alert?'] == 1]
+    tmp['body_length'] = tmp['body'].apply(lambda x: [len(a) if a is not None else 0 for a in x])
 
     if len(tmp.loc[tmp['alert?'] == 1]) != 0:
-        tmp.loc[tmp['alert?'] == 1].apply(lambda row: log_at_results(row), axis=1)
+
+        for row in range(len(tmp)):
+            data = {'document_count': [tmp.iloc[row]['count']],
+                    'query_date': [str(tmp.iloc[row]['date'])],
+                    'alert?': [tmp.iloc[row]['alert?']],
+                    'LN_document_count': [np.log(tmp.iloc[row]['count'])],
+                    'name_label': [tmp.iloc[row]['keyword_label']],
+                    'urls': [],
+                    'cluster_center_docs': []}
+
+            X = np.array(tmp.iloc[row]['encoding'])
+            X = np.reshape(X, newshape=(X.shape[0], 1))
+
+            ln_body_len = np.reshape(np.array(np.log(tmp.iloc[row]['body_length'])), newshape=(X.shape[0], 1))
+            body = tmp.iloc[row]['body']
+            url = tmp.iloc[row]['url']
+
+            X = np.append(X, ln_body_len, axis=1)
+
+            # todo: need to deal with none values here...put zero instead of none...
+            with open(os.path.join(project_dirs['data'], 'kmeans_model.pkl'), 'rb') as pkl:
+                model = pickle.load(pkl)
+                centroids = model.cluster_centers_
+                pred = np.reshape(np.array(model.predict(X)), newshape=(X.shape[0], 1))
+
+            X = np.append(X, pred, axis=1)
+            args = [cdist(np.reshape(np.array(centroids[idx]), newshape=(1, 2)), X[:, 0:2]).argmin() for idx in
+                    range(centroids.shape[0])]
+            docs = [body[idx] for idx in args]
+            urls = [url[idx] for idx in args]
+            data['cluster_center_docs'].append(', '.join(docs))
+            data['urls'].append(', '.join(urls))
+            log_df = pd.DataFrame(data)
+
+            # todo: save the clusters that alert to folder of keyword...
+            f, ax = plt.subplots(figsize=(10, 10))
+            plt.scatter(X[:, 0], X[:, 1], c=X[:, 2])
+            plt.scatter(centroids[:, 0], centroids[:, 1], c='black')
+            print(log_df)
+            log_df.loc[log_df['alert?'] == 1].apply(lambda res: log_at_results(res), axis=1)
     else:
         print(f'NO RECORDS TO LOG IN AT. {len(tmp)} keywords added to daily counts for {NEW_DATE}')
 
-    # APPLY CLUSTERING MODEL TO YESTERDAY FREQUENCY ALERTS
-
-    # todo: need to log the original uids and call the data back to apply the clustering...
-    #  but for now, just make the alert and send to channel...
-
+    # todo: retrain the clustering model using the daily_counts.pkl...instead of downloading the data again...
+    print('Number of days alerted with RFJ keywords:', len(counts_df.loc[counts_df['alert?'] == 1]))
 
 if __name__ == '__main__':
     main()
