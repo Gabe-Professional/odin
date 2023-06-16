@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 import os
+from scipy import interpolate
 from datetime import timedelta
 import pandas as pd
+import numpy as np
 
 
 def clean_data(filepath, data_type: str):
@@ -50,17 +52,23 @@ class GData:
         if country not in self.data.columns:
             print(f'please provide an available country from the list: \n {self.data.columns}')
         else:
-            # todo: make the curve smooth
-            # todo: fill in the curve
             # todo: make option to select multiple countries and plot on one axis...
-            # todo: show the values as text
-            # todo: add grid
             # todo: save to project directory
 
-            x = self.data['date'].tolist()
+            x = [d.date() for d in self.data['date'].tolist()]
             y = self.data[country].astype(dtype=int).tolist()
-            ax.plot(x, y)
+
+            plt.title(f'Website Viewers {min(x)} - {max(x)} from {country.upper()} \n Total: {sum(y)}')
+            xnew = np.linspace(start=min(self.data.index), stop=max(self.data.index), num=1000)
+            bspline = interpolate.make_interp_spline(self.data.index, self.data[country])
+            ynew = bspline(xnew)
+            plt.plot(xnew, ynew)
+            plt.fill_between(xnew, ynew)
+            plt.xticks(ticks=self.data.index, labels=x, rotation=45, ha='right')
+            for a, b in zip(self.data.index, y):
+                plt.annotate(text=b, xy=(a, b))
+
+            plt.tight_layout()
+            # ax.plot(x, y)
             if show:
                 plt.show()
-            print(x)
-            print(y)
