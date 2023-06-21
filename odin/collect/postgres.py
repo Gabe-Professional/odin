@@ -73,18 +73,18 @@ class Db(object):
                 warnings.warn(AdminDBWarning(f'Could not load {key} from Credentials. Proceeding...'))
         return Db(**connection_info)
 
-    # todo: fix cursor spelling
-    def _get_cusor(self):
+    def _get_cursor(self):
         return self._conn.cursor()
 
     ### QUERY FUNCTIONS ###
+    # todo: make pretty data function
     def get_messages_by_datetime(self, start_datetime, end_datetime, direction='in', pretty=True):
         """Helper function for getting messages from the english engagement messages table"""
         logger.info(f'Getting messages from Postgres between: {start_datetime} - {end_datetime}')
-        table = "tblcApXQthi5pSGHh"
-        sql = f'select "Message_ID", "Message", "DTG", "Language" from public."{table}" ' \
-              f'where "Direction" in %s and "DTG" BETWEEN %s and %s'
-        cursor = self._get_cusor()
+        table = "messages"
+        sql = f'select "message_id", "message", "timestamp", "engage_org" from public."{table}" ' \
+              f'where "direction" in %s and "timestamp" BETWEEN %s and %s'
+        cursor = self._get_cursor()
         cursor.execute(sql, (tuple([direction]), tuple([start_datetime], ), tuple([end_datetime], ),))
 
         data = {'message_id': [],
@@ -112,26 +112,22 @@ class Db(object):
     def query(self, query_statement, query_parameters):
 
         # todo: make a unit test for this...
-        cursor = self._get_cusor()
+        cursor = self._get_cursor()
         cursor.execute(query_statement, query_parameters)
         val = cursor.fetchall()
         cursor.close()
         return val
 
-    def get_lastest_inbound_time_from_contact(self, contact_name, table):
+    # todo: this function may not be useful anymore...could just get the latest from a contact from the messages table
+    def get_latest_from_contact_id(self, contact_id):
+        table = "messages"
+        # data = []
+        sql = f'select "contact_id", "message", "timestamp" from public."{table}" ' \
+              f'where "contact_id" in %s'
+        cursor = self._get_cursor()
+        cursor.execute(sql, (tuple([contact_id]),))
+        data = cursor.fetchall()
 
-        data = []
-        if table is None:
-            print('Please provide a table to query')
-
-        elif table is not None:
-
-            sql = f'select "Subject_ID", "Latest_Inbound" from public."{table}" ' \
-                  f'where "Subject_ID" in %s'
-            cursor = self._get_cusor()
-            cursor.execute(sql, (tuple([contact_name]), ))
-            data = cursor.fetchall()
-
-            cursor.close()
+        cursor.close()
         return data
 

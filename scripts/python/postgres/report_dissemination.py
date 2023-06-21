@@ -64,7 +64,7 @@ if not os.path.exists(fp):
         name, table, pass_time = row['Name'], prefix_dict[row['prefix'].lower()], row['First Pass Off Timestamp']
 
         with Db.Create('DEV') as db:
-            tmp = db.get_lastest_inbound_time_from_contact(contact_name=name, table=table)
+            tmp = db.get_latest_from_contact_id(contact_id=name)
             # print(tmp)
 
             if len(tmp) > 0:

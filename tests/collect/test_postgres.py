@@ -30,11 +30,10 @@ def test_get_messages_by_datetime(start_time, end_time):
     assert len(data.values()) > 0
 
 
-
-def test_get_latest_inbound_time_from_contact():
-    contact_name = 'EN8211'
-    table = 'tblc88A79sJPpnSyW'
+def test_get_latest_from_contact_id():
+    contact_id = '32127'
+    table = 'contacts'
     with Db.Create('DEV') as db:
-        data = db.get_lastest_inbound_time_from_contact(contact_name=contact_name, table=table)
-
+        data = db.get_latest_from_contact_id(contact_id=contact_id)
+    print(data)
     # todo: what to assert here? data could actually be none
