@@ -28,7 +28,8 @@ def name_labels():
 
 @pytest.fixture
 def names_data_csv():
-    return os.path.join(os.path.dirname(__file__), 'data', 'test_names_2022-05-31 21:03:45+00:00_2022-05-31 22:56:20+00:00.csv')
+    return os.path.join(os.path.dirname(__file__), 'data',
+                        'test_names_2022-05-31 21:03:45+00:00_2022-05-31 22:56:20+00:00.csv')
 
 
 @pytest.fixture
@@ -38,4 +39,4 @@ def tmp_dir():
 
 @pytest.fixture
 def ga_data_fp():
-    return os.path.join(os.path.dirname(__file__), 'data', 'google_analytics_activity.csv')
+    return os.path.join(os.path.dirname(__file__), 'data', 'download_activity.csv')
