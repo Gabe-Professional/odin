@@ -36,7 +36,7 @@ def test_elasticsearch_connection(elasticsearch_query_path):
     logger.info('Testing Credentials DB Connection')
     cluster = 'PROD'
 
-    fields = ['uid', 'timestamp', 'author', 'body', 'domain', 'encoding']
+    fields = ['uid', 'timestamp', 'author', 'body', 'domain', 'encoding', 'url']
     custom_fields = ['uid', 'url', 'author_id']
 
     size = 10

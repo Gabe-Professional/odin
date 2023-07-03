@@ -305,7 +305,7 @@ def main():
             f, ax = plt.subplots(figsize=(10, 10))
             plt.scatter(X[:, 0], X[:, 1], c=X[:, 2])
             plt.scatter(centroids[:, 0], centroids[:, 1], c='black')
-            print(log_df)
+            print(log_df.loc[log_df['alert?'] == 1])
             log_df.loc[log_df['alert?'] == 1].apply(lambda res: log_at_results(res), axis=1)
     else:
         print(f'NO RECORDS TO LOG IN AT. {len(tmp)} keywords added to daily counts for {NEW_DATE}')

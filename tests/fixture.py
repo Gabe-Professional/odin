@@ -34,3 +34,8 @@ def names_data_csv():
 @pytest.fixture
 def tmp_dir():
     return '/tmp/test_setup'
+
+
+@pytest.fixture
+def ga_data_fp():
+    return os.path.join(os.path.dirname(__file__), 'data', 'google_analytics_activity.csv')
