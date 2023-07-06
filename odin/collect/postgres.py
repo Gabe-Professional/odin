@@ -133,3 +133,16 @@ class Db(object):
         cursor.close()
         return data
 
+    def get_contacts_by_datetime(self, start_datetime, end_datetime, pretty=True):
+        table = "contacts"
+        fields = ["contact_id", "contact_urn", "created_time"]
+        sql = f'select {",".join(fields)} from public."{table}" ' \
+              f'where "created_time" BETWEEN %s and %s'
+        cursor = self._get_cursor()
+        cursor.execute(sql, (tuple([start_datetime], ), tuple([end_datetime], ),))
+        data = cursor.fetchall()
+
+        if pretty:
+            data = pd.DataFrame(data=data, columns=fields)
+
+        return data

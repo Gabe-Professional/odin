@@ -46,3 +46,23 @@ def test_get_messages_from_contact_id():
         assert type(data) == list
         assert len(data) != 0
 
+def test_get_contacts_by_datetime(start_time, end_time):
+    st = start_time
+    et = end_time
+
+    pretty = True
+    if pretty:
+        with Db.Create('DEV') as db:
+            df = db.get_contacts_by_datetime(start_datetime=st, end_datetime=et, pretty=pretty)
+        assert len(df) != 0
+        assert len(df.columns) == 3
+        assert type(df) == pd.DataFrame
+
+    pretty = False
+    if not pretty:
+        with Db.Create('DEV') as db:
+            data = db.get_contacts_by_datetime(start_datetime=st, end_datetime=et, pretty=pretty)
+        assert len(data) != 0
+        assert len(data[0]) == 3
+        assert type(data) == list
+
