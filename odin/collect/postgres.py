@@ -119,14 +119,16 @@ class Db(object):
         return val
 
     # todo: this function may not be useful anymore...could just get the latest from a contact from the messages table
-    def get_latest_from_contact_id(self, contact_id):
+    def get_messages_from_contact_id(self, contact_id, pretty=True):
         table = "messages"
         # data = []
-        sql = f'select "contact_id", "message", "timestamp" from public."{table}" ' \
-              f'where "contact_id" in %s'
+        fields = ["contact_id", "message", "timestamp"]
+        sql = f'select {",".join(fields)} from public.{table} where "contact_id" in %s'
         cursor = self._get_cursor()
         cursor.execute(sql, (tuple([contact_id]),))
         data = cursor.fetchall()
+        if pretty:
+            data = pd.DataFrame(data=data, columns=fields)
 
         cursor.close()
         return data

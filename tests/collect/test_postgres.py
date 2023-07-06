@@ -30,10 +30,19 @@ def test_get_messages_by_datetime(start_time, end_time):
     assert len(data.values()) > 0
 
 
-def test_get_latest_from_contact_id():
+def test_get_messages_from_contact_id():
     contact_id = '32127'
-    table = 'contacts'
-    with Db.Create('DEV') as db:
-        data = db.get_latest_from_contact_id(contact_id=contact_id)
-    print(data)
-    # todo: what to assert here? data could actually be none
+    pretty = True
+    if pretty:
+        with Db.Create('DEV') as db:
+            df = db.get_messages_from_contact_id(contact_id=contact_id, pretty=pretty)
+        assert type(df) == pd.DataFrame
+        assert len(df) != 0
+
+    pretty = False
+    if not pretty:
+        with Db.Create('DEV') as db:
+            data = db.get_messages_from_contact_id(contact_id=contact_id, pretty=pretty)
+        assert type(data) == list
+        assert len(data) != 0
+
