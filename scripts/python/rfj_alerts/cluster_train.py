@@ -112,10 +112,6 @@ def run():
     sample_df = pd.read_csv(os.path.join(DIRS['data'], 'training_sample.csv'))
 
     #### TRAIN A CLUSTERING MODEL FOR THE DAYS KEYWORDS ALERTED ON...
-    #
-    # f, ax = plt.subplots(nrows=2, figsize=(10, 10))
-    # ax[0].hist(X[:, 0], ec='w')
-    # ax[1].hist(X[:, 1], ec='w')
 
     X_train, X_test, train_idx, test_idx = train_test_split(X[:, 0:2], X[:, 2], test_size=.3, shuffle=False)
     f, ax = plt.subplots(figsize=(10, 10))
@@ -190,100 +186,6 @@ def run():
 
         c_docs = sample_df.iloc[args]
         print(c_docs.body.tolist())
-
-        exit()
-
-
-    ##### SAVE THIS STUFF FOR LATER ####
-
-    # for idx in range(len(tmp)):
-    #     key, label = tmp.iloc[idx, :]['name'], tmp.iloc[idx, :]['label']
-    #     LABELS_DICT[key] = label
-    #
-    # files = [f for f in glob.glob(os.path.join(DATA_DIR, '*.csv')) if 'daily_counts' not in f]
-
-    # print('READING THE FILES TO TRAIN ON...')
-    # df = pd.concat(map(pd.read_csv, files)).drop_duplicates(subset=['uid', 'timestamp']).reset_index(drop=True)
-    # df[f'{COLUMN_TITLE}'] = df['body'].apply(lambda x: oum.label_text_from_dict(document_text=x, label_dict=LABELS_DICT))
-
-    #### MAKE A SECOND DATAFRAME WITH MENTIONS OF MULTIPLE RO SUBJECTS
-    # mult_df = df.loc[df[f'{COLUMN_TITLE}'].map(len) > 1]
-
-    #### RENAME THE RO SUBJECT AS FIRST ENTRY IN DF AND SECOND ENTRY IN MULT_DF
-    # df[f'{COLUMN_TITLE}'] = df.loc[:, f'{COLUMN_TITLE}'].apply(lambda x: x[0] if len(x) > 0 else x)
-    # mult_df.loc[:, f'{COLUMN_TITLE}'] = mult_df.loc[:, f'{COLUMN_TITLE}'].apply(lambda x: x[1])
-
-    #### COMBINE THE DATAFRAMES TO GET THE SINGLE RO SUBJECT MENTIONS
-    # df = pd.concat([df, mult_df]).reset_index(drop=True)
-    # df['date'] = pd.to_datetime(df['timestamp'], errors='coerce').dt.date
-
-    # dates = pd.to_datetime(list(zip(*ENTRIES))[1]).date
-    # labels = list(zip(*ENTRIES))[0]
-
-    #### MAKE THE LABSE TRAINING DATASET
-    # df = df.loc[df[f'{COLUMN_TITLE}'].map(len) > 0]
-    # sample_df = df.loc[(df.loc[:, 'date'].isin(dates)) & (df.loc[:, f'{COLUMN_TITLE}'].isin(labels))]
-    # sample_df = sample_df.drop_duplicates(subset='labse_encoding').reset_index(drop=True)
-
-    # sample_df.loc[:, 'labse_encoding'] = sample_df.loc[:, 'labse_encoding'].apply(lambda x: oum.parse_vector_string(x))
-    # sample_df = sample_df.dropna(subset=['follower_count'])
-    # # sample_df.loc[:, 'follower_count'] = sample_df.loc[:, 'follower_count'].astype(float).replace(to_replace=0, value=0.0001)
-
-    # sample_df = sample_df.loc[sample_df.loc[:, 'follower_count'] > 0]
-    #     sample_df = sample_df.loc[sample_df.loc[:, 'labse_encoding'].map(type) == list].sample(n=SAMPLE_SIZE, random_state=0).reset_index(drop=True)
-
-    #     sample_df.loc[:, 'follower_count'] = np.log(sample_df.loc[:, 'follower_count'])
-    #     print(sample_df.head(10))
-    #     print('TOTAL DATA POINTS TO TRAIN ON: ', len(sample_df), len(df))
-    #
-    #     #### GET THE FEATURES
-    #     X = np.array(sample_df.loc[:, 'labse_encoding'].tolist())
-    #     X = np.reshape(np.sum(X, axis=1), newshape=(X.shape[0], 1))
-    #     X = np.append(X, np.reshape(list(sample_df.loc[:, 'follower_count']), newshape=(X.shape[0], 1)), axis=1)
-
-    # sample_df['labse_sum'] = X[:, 0]
-    #     sample_df['ln_follower_count'] = X[:, 1]
-    #
-    #     idx = np.array(sample_df.index.tolist())
-    #     print('THE SHAPE OF THE DATA SET IS: ', X.shape)
-    #
-    #     X_train, X_test, train_idx, test_idx = train_test_split(X, idx, test_size=.3, shuffle=False)
-    #
-    #     f, ax = plt.subplots(figsize=(10, 10))
-    #     plt.scatter(X_train[:, 0], X_train[:, 1])
-    #     plt.title(f'TRAINING DATA SCATTER (TWITTER ONLY), n={len(train_idx)}')
-    #     plt.xlabel('LABSE SUM')
-    #     plt.ylabel('LN FOLLOWER COUNT')
-    #     plt.grid()
-    #     plt.tight_layout()
-    #     f.savefig('training_scatter.png')
-    #
-    #     Ks = list(range(1, 10))
-    #     km = [KMeans(n_clusters=i, random_state=0) for i in Ks]
-    #
-    #     res_data = {}
-    #
-    #     f, ax = plt.subplots(figsize=(10, 10))
-    #     for i in range(len(km)):
-    #         clusters = Ks[i]
-    #         km[i].fit(X_train)
-    #         sse = km[i].inertia_
-    #         res_data[clusters] = sse
-    #
-    #     centroids = km[2].cluster_centers_
-    #     print('CENTORIDS LOCATED AT: \n', centroids)
-    #     print('SSE RESULTS FOR K CLUSTERS: \n', res_data)
-    #     plt.plot(res_data.keys(), res_data.values())
-    #     plt.title('NUMBER OF CLUSTERS VS. SSE (TWITTER ONLY)')
-    #     plt.grid()
-    #     plt.xlabel('CLUSTERS')
-    #     plt.ylabel('SSE')
-    #     plt.tight_layout()
-    #     f.savefig('elbow_method_training_results.png')
-    #     pred = km[2].predict(X_test)
-    #
-    #     pred_df = sample_df.iloc[test_idx]
-    #     pred_df.loc[:, 'CLUSTER'] = pred
 
 if __name__ == '__main__':
     run()

@@ -27,11 +27,11 @@ MAIN_DIR = os.path.expanduser('~/data/odin')
 DATA_DIR = os.path.join(MAIN_DIR, f'rfj_alerting/{LABEL_DIR}/data')
 
 
-DAILY_COUNTS_FP = os.path.realpath(os.path.join(DIRNAME, '..', '..', '..', 'odin', 'data', 'daily_counts.csv'))
-NAME_LABELS_FP = os.path.realpath(os.path.join(DIRNAME, '..', '..', '..', 'odin', 'data', 'name_labels.csv'))
+DAILY_COUNTS_FP = os.path.realpath(os.path.join(DIRNAME, '../..', '..', '..', 'odin', 'data', 'daily_counts.csv'))
+NAME_LABELS_FP = os.path.realpath(os.path.join(DIRNAME, '../..', '..', '..', 'odin', 'data', 'name_labels.csv'))
 PLOTS_DIR = os.path.join(MAIN_DIR, f'rfj_alerting/{LABEL_DIR}/plots')
-LIMITS_JSON_FP = os.path.realpath(os.path.join(DIRNAME, '..', '..', '..', 'odin', 'data', 'limits.json'))
-PKL_FP = os.path.join(DIRNAME, 'kmeans_model.pkl')
+LIMITS_JSON_FP = os.path.realpath(os.path.join(DIRNAME, '../..', '..', '..', 'odin', 'data', 'limits.json'))
+PKL_FP = os.path.join(DIRNAME, '../kmeans_model.pkl')
 
 assert os.path.exists(LIMITS_JSON_FP)
 assert os.path.exists(DAILY_COUNTS_FP)
