@@ -1,22 +1,9 @@
-# from odin.credentials.config import get_creds
-#
-#
-# def create(cluster='DEV'):
-import json
 import logging
-import os
 import warnings
-
 import pandas as pd
 import psycopg2
 from odin.credentials.config import BackboneProperties
 logger = logging.getLogger(__name__)
-
-# todo: replace print functions with logger...need to figure out how it works...
-
-# todo: make this part of the class to directly apply to get_dsn
-
-# todo: establish a simple connection, then create the helpers...
 
 
 class AdminDbError(Exception):

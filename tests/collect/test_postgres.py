@@ -1,4 +1,3 @@
-import odin.collect.postgres as pg
 import logging
 import pandas as pd
 from odin.collect.postgres import Db
@@ -45,6 +44,7 @@ def test_get_messages_from_contact_id():
             data = db.get_messages_from_contact_id(contact_id=contact_id, pretty=pretty)
         assert type(data) == list
         assert len(data) != 0
+
 
 def test_get_contacts_by_datetime(start_time, end_time):
     st = start_time
