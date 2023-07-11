@@ -42,7 +42,6 @@ class Db(object):
     def __enter__(self):
         return self
 
-    # todo: figure this out...
     def __exit__(self, t, value, traceback):
         pass
 
@@ -64,7 +63,6 @@ class Db(object):
         return self._conn.cursor()
 
     ### QUERY FUNCTIONS ###
-    # todo: make pretty data function
     def get_messages_by_datetime(self, start_datetime, end_datetime, direction='in', pretty=True):
         """Helper function for getting messages from the english engagement messages table"""
         logger.info(f'Getting messages from Postgres between: {start_datetime} - {end_datetime}')
@@ -105,7 +103,6 @@ class Db(object):
         cursor.close()
         return val
 
-    # todo: this function may not be useful anymore...could just get the latest from a contact from the messages table
     def get_messages_from_contact_id(self, contact_id, pretty=True):
         table = "messages"
         # data = []

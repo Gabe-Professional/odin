@@ -1,9 +1,4 @@
 import logging
-
-import pandas as pd
-
-from .elastic_search import get_creds, make_api_call
-from odin.utils.munging import clean_data, change_query_datetime
 import os
 from odin.utils.projects import setup_project_directory
 from odin.collect.postgres import Db as PG
