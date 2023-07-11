@@ -227,8 +227,7 @@ def main():
     KEYWORDS = REWARD_OFFER_NAMES
     PROJECT_DIRECTORY = '~/projects/odin/rfj_alerting_app'
     project_dirs = setup_project_directory(PROJECT_DIRECTORY)
-    # LABELS_DF = pd.read_csv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
-    #                                      'odin', 'data', 'name_labels.csv'))
+
     LABELS_DF = pd.read_csv(os.path.join(project_dirs['data'], 'name_labels.csv'))
     LABELS_DICT = {LABELS_DF.iloc[idx, :]['name']: LABELS_DF.iloc[idx, :]['label'] for idx in range(len(LABELS_DF))}
     NEW_DATE = (datetime.datetime.now() + timedelta(days=-1)).date()
@@ -243,8 +242,8 @@ def main():
     # MAKE A LIST OF DATES TO LOG GREATER THAN OR EQUAL TO THE START QUERY TIME
     log_dates = pd.to_datetime(counts_df['date']).dt.date
     log_dates = [str(d) for d in log_dates.loc[log_dates >= pd.to_datetime(st).date()].unique().tolist()]
+
     # MAKE THE CONFIDENCE INTERVALS...SAMPLE THE COUNTS DATA FOR 30 DAYS OF EACH KEYWORD...AS TIME GOES ON,
-    # THE OBSERVATIONS WILL INCREASE AND (EVENTUALLY) ALL HAVE AT LEAST 30
     conf_dict = make_conf_dict(counts_df, project_dirs=project_dirs, plot=PLOT)
 
     ## ASSESS THE FREQUENCIES OF NEW DOCUMENT COUNTS (YESTERDAY)
@@ -252,17 +251,13 @@ def main():
                                                                          row['count'], conf_dict=conf_dict), axis=1)
     counts_df = counts_df.sort_values(by=['date', 'keyword_label'])
 
-    # todo: if the path doesn't exist...
-    # todo: this main function may need some revamping...
     counts_df.to_pickle(os.path.join(project_dirs['data'], 'daily_counts.pkl'))
 
     tmp = pd.DataFrame(counts_df.loc[(counts_df['date'].isin(log_dates)) |
                                      (counts_df['date'].isin(pd.to_datetime(log_dates).date))])
 
     # LOG ALERTING RESULTS INTO AIRTABLE
-    # CLUSTER THE ALERTING RESULTS OR ALL RESULTS?
     pd.set_option('display.max_columns', None)
-    # tmp = counts_df.loc[counts_df['alert?'] == 1]
     tmp['body_length'] = tmp['body'].apply(lambda x: [len(a) if a is not None else 0 for a in x])
 
     if len(tmp.loc[tmp['alert?'] == 1]) != 0:
@@ -285,7 +280,6 @@ def main():
 
             X = np.append(X, ln_body_len, axis=1)
 
-            # todo: need to deal with none values here...put zero instead of none...
             with open(os.path.join(project_dirs['data'], 'kmeans_model.pkl'), 'rb') as pkl:
                 model = pickle.load(pkl)
                 centroids = model.cluster_centers_
@@ -300,17 +294,18 @@ def main():
             data['urls'].append(', '.join(urls))
             log_df = pd.DataFrame(data)
 
-            # todo: save the clusters that alert to folder of keyword...
             f, ax = plt.subplots(figsize=(10, 10))
             plt.scatter(X[:, 0], X[:, 1], c=X[:, 2])
             plt.scatter(centroids[:, 0], centroids[:, 1], c='black')
-            print(log_df.loc[log_df['alert?'] == 1])
+            if len(log_df.loc[log_df['alert?'] == 1]) > 0:
+                print(log_df.loc[log_df['alert?'] == 1])
             log_df.loc[log_df['alert?'] == 1].apply(lambda res: log_at_results(res), axis=1)
     else:
         print(f'NO RECORDS TO LOG IN AT. {len(tmp)} keywords added to daily counts for {NEW_DATE}')
 
     # todo: retrain the clustering model using the daily_counts.pkl...instead of downloading the data again...
     print('Number of days alerted with RFJ keywords:', len(counts_df.loc[counts_df['alert?'] == 1]))
+
 
 if __name__ == '__main__':
     main()
