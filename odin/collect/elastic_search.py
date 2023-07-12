@@ -169,11 +169,14 @@ class Db(object):
         elif type(query) == dict:
             query = query
         # todo: figure out the best way to load the query...either full dsl json or query['query']
-
+        # todo: need to conditionally use search after and batch. If the results are less than the batch
+        #  size, the function fails. To avoid, conditionally use batch size based on the count...
+        #  if count is less than batch size, simply query as normal...
+        
         if search_after:
             if not batch_size:
                 logger.info('Setting default batch size to 100...')
-                batch_size = 100
+                batch_size = 50
 
             count = self.count(query=query, index_pattern=index_pattern)
             results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='_id')
