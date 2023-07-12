@@ -172,7 +172,7 @@ class Db(object):
         # todo: need to conditionally use search after and batch. If the results are less than the batch
         #  size, the function fails. To avoid, conditionally use batch size based on the count...
         #  if count is less than batch size, simply query as normal...
-        
+
         if search_after:
             if not batch_size:
                 logger.info('Setting default batch size to 100...')

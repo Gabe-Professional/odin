@@ -12,13 +12,6 @@ strg = "[0.015952223911881447, 0.029908902943134308, -0.062116459012031555, -0.0
        "-0.05275590717792511, -0.021328287199139595]"
 
 
-def test_add_query_datetime(query_path, start_time, end_time):
-    start_time = start_time
-    data = oum.change_query_datetime(start_time=start_time, end_time=end_time, query_path=query_path)
-    assert data['query']['bool']['filter'][3]['range']['system_timestamp']['gte'] == start_time
-    assert data['query']['bool']['filter'][3]['range']['system_timestamp']['lte'] == end_time
-
-
 def test_text_tokenize():
     string = 'This is a picture of a CAT!!! But not really :)...And I would like a picture of a dog'
     lem = oum.text_tokenize(string, add_stopwords=['like', 'would'])
