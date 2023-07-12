@@ -9,12 +9,9 @@ logger = logging.getLogger(__name__)
 import json
 
 
-
-
-
-
 class Singleton(type):
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
@@ -29,8 +26,6 @@ def load_environment(prefix=None):
         prefix = "ODIN_"
     else:
         prefix = "ODIN_" + prefix + "_"
-    # for k, v in os.environ.items():
-    #     print(k)
     keys = {
         key[len(prefix):].upper(): v
         for key, v in os.environ.items()
@@ -70,14 +65,11 @@ class Properties(object):
     @property
     def file(self):
 
-
-
         directory = os.path.expanduser(os.environ.get("ODIN_CONFIG", "~/.cred/ODIN_CONFIG"))
         return os.path.join(directory, self._file)
 
     def __init__(self):
         logger.debug("Constructing Singleton Properties for {}".format(self.file))
-
 
         self._credDict = load_stuff_from_file(self.file)
         self._credDict.update(load_environment(self._prefix))

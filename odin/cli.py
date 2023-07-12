@@ -1,10 +1,6 @@
 import argparse
-import sre_parse
-import pkg_resources
-
 from odin.collect.cli import setup_collect_parser
 from odin.utils.cli import setup_project_parser
-from odin.analyze.main import analyze_main
 import logging
 logger = logging.getLogger(__name__)
 

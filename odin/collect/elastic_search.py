@@ -73,9 +73,7 @@ def parse_url(username, password, endpoint):
 
 def make_pretty_df(data, fields=[]):
 
-
     # todo: need to account for times when no data returned...
-
     # todo: need to add meta fields when necessary...
     norm_fields = ['author', 'domain', 'id', 'body', 'author_id', 'url', 'timestamp']
     meta_fields = []
@@ -114,7 +112,6 @@ def make_pretty_df(data, fields=[]):
 
 class Db(object):
 
-
     def __init__(self, **connection_args):
         self.logger = logging.getLogger(__name__)
 
@@ -132,7 +129,7 @@ class Db(object):
                                         f'environment variable loaded properly')
 
         try:
-            # todo: try and do with with kwargs...
+            # todo: try to do with with kwargs...
             url = parse_url(username=connection_args['username'],
                             password=connection_args['password'],
                             endpoint=connection_args['endpoint'])
@@ -145,7 +142,6 @@ class Db(object):
     def __enter__(self):
         return self
 
-    # todo: figure this out...
     def __exit__(self, t, value, traceback):
         pass
 
@@ -173,11 +169,14 @@ class Db(object):
         elif type(query) == dict:
             query = query
         # todo: figure out the best way to load the query...either full dsl json or query['query']
+        # todo: need to conditionally use search after and batch. If the results are less than the batch
+        #  size, the function fails. To avoid, conditionally use batch size based on the count...
+        #  if count is less than batch size, simply query as normal...
 
         if search_after:
             if not batch_size:
                 logger.info('Setting default batch size to 100...')
-                batch_size = 100
+                batch_size = 50
 
             count = self.count(query=query, index_pattern=index_pattern)
             results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='_id')
@@ -199,7 +198,6 @@ class Db(object):
         return data
 
     def count(self, query, index_pattern):
-        # todo: need to get rid of doing this...move to different level of class...
         if type(query) == str:
             with open(query) as f:
                 query = json.load(f)
@@ -209,8 +207,8 @@ class Db(object):
         size = res['count']
         return size
 
-# SOME HELPERS TO BUILD DSL QUERIES
 
+# SOME HELPERS TO BUILD DSL QUERIES
 def build_body_kw_query(keywords: list, start_time, end_time):
     # todo: add checking for datetime format...
     dsl_fp = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'query', 'keyword_query_template.json')

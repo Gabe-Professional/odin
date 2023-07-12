@@ -31,7 +31,6 @@ def analyze_main(args):
 
         K = range(1, 15)
         sosd = []
-        # todo: what are the best three or 4 predictors?
         for k in K:
             km = KMeans(n_clusters=k)
             ft = km.fit(X)
@@ -41,4 +40,3 @@ def analyze_main(args):
         plt.xlabel('Cluster Count')
         plt.ylabel('Sum of Squared Distances')
         plt.title('Elbow method for optimal CLUSTER size')
-        plt.show()
