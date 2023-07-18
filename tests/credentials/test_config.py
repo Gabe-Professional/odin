@@ -1,6 +1,11 @@
 import logging
-from odin.credentials.config import BackboneProperties
+from odin.credentials.config import BackboneProperties, Credentials
 logger = logging.getLogger(__name__)
+
+
+def test_credentials():
+    creds = Credentials()
+    assert type(creds.keys()) == dict().keys()
 
 
 def test_backbone_props():

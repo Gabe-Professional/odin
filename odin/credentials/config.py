@@ -65,7 +65,7 @@ class Properties(object):
     @property
     def file(self):
 
-        directory = os.path.expanduser(os.environ.get("ODIN_CONFIG", "~/.cred/ODIN_CONFIG"))
+        directory = os.path.expanduser(os.environ.get("ODIN_CONFIG", "~/.odin/ODIN_CONFIG"))
         return os.path.join(directory, self._file)
 
     def __init__(self):
