@@ -1,11 +1,11 @@
 import pandas as pd
 import pytest
 import os
-from odin.collect.elastic_search import get_creds, make_api_call, \
-    get_query_from_path, Db, make_pretty_df, build_body_kw_query
+from odin.collect.elastic_search import get_query_from_path, Db, make_pretty_df, build_body_kw_query
 from tests.fixture import query_path, start_time, end_time, elasticsearch_query_path
 import logging
 from datetime import timedelta
+import warnings
 logger = logging.getLogger(__name__)
 """
 # Run test example:
@@ -16,18 +16,6 @@ pytest tests/module/file.py::test_function_name
 
 def test_get_query_from_path(elasticsearch_query_path):
     query = get_query_from_path(elasticsearch_query_path)
-
-
-def test_get_creds():
-    creds = get_creds()
-    assert creds.keys() == {'username', 'password', 'endpoint'}
-
-
-def test_make_api_call(elasticsearch_query_path):
-    creds = get_creds()
-    qp = elasticsearch_query_path
-    query = get_query_from_path(elasticsearch_query_path)
-    data = make_api_call(creds, query=query, index_pattern='pulse', max_hits=10)
 
 
 def test_elasticsearch_connection(elasticsearch_query_path):

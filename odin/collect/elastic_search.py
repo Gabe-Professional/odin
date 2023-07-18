@@ -2,14 +2,13 @@ import logging
 import os
 import json
 import pandas as pd
-import requests as req
 from odin.credentials.config import BackboneProperties
 from elasticsearch import Elasticsearch
-import psycopg2
 import warnings
+from elasticsearch.exceptions import ElasticsearchWarning
+
 logger = logging.getLogger(__name__)
 cwd = os.getcwd()
-
 
 
 def get_query_from_path(filepath):
@@ -17,46 +16,6 @@ def get_query_from_path(filepath):
         query = json.load(fp)
     return query
 
-
-def get_creds():
-    """A function to get the elastic search ES_CREDS and return the data.
-
-    :param cred_file:
-    :return:
-    """
-    cp = os.path.expanduser('~/.cred/odin_es_ro.json')
-    with open(cp, 'r') as f:
-        data = json.load(f)
-    return data
-
-
-def make_api_call(creds: dict, query, index_pattern: str, max_hits=10000):
-    """
-    :param creds:
-    :param query:
-    :param index_pattern:
-    :param max_hits:
-    :return: data:
-    """
-    un = creds['username']
-    pw = creds['password']
-    ep = creds['endpoint'][8:]
-    url = ['https://{}:{}@{}'.format(un, pw, ep)]
-    es = Elasticsearch(url)
-
-    if type(query) == str:
-        with open(query) as f:
-            query = json.load(f)
-    elif type(query) == dict:
-        query = query
-
-    params = query
-    results = es.search(index=index_pattern, body=params, size=max_hits)
-    data = results['hits']['hits'][:]
-    return data
-
-
-# todo: use this to create the elastic search data base connection...
 
 class AdminDbError(Exception):
     pass
@@ -134,6 +93,9 @@ class Db(object):
                             password=connection_args['password'],
                             endpoint=connection_args['endpoint'])
             self._conn = Elasticsearch(url)
+            ## NEED TO IGNORE THE ELASTICSEARCH SERVER WARNING ##
+            warnings.simplefilter('ignore', ElasticsearchWarning)
+
         except Exception:
             msg = 'Connection to DB failed...ensure you have proper credentials and are on VPN'
             self.logger.error(msg)
@@ -149,6 +111,8 @@ class Db(object):
     def Create(cluster='DEV'):
         """Create a New instance of the database for a given Postgres Cluster"""
         # creds = Credentials().get_creds(cluster=cluster)
+
+
         logger.info(f'Creating database connection to Elastic {cluster}')
         bp = BackboneProperties()
         connection_info = {}
@@ -157,12 +121,13 @@ class Db(object):
                 connection_info[key] = bp[f'{cluster}_ELASTIC_{key.upper()}']
             except KeyError:
                 warnings.warn(AdminDBWarning(f'Could not load {key} from Credentials. Proceeding...'))
+
         return Db(**connection_info)
 
     def query(self, query, index_pattern, batch_size=None, search_after=True):
         """Helper function to query Elasticsearch easily...
         """
-
+        warnings.simplefilter(action='ignore')
         if type(query) == str:
             with open(query) as f:
                 query = json.load(f)
@@ -193,7 +158,7 @@ class Db(object):
             if not batch_size:
                 logger.info('Setting batch size to max records...10,000')
                 batch_size = 10000
-            results = self._conn.search(index=index_pattern, body=query, size=batch_size)
+            results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size)
             data = results['hits']['hits'][:]
         return data
 
@@ -203,8 +168,9 @@ class Db(object):
                 query = json.load(f)
         elif type(query) == dict:
             query = query
-        res = self._conn.count(index=index_pattern, body=query)
-        size = res['count']
+
+        # res = self._conn.count(index=index_pattern, query=query)
+        size = self._conn.count(index=index_pattern, body=query)['count']
         return size
 
 
