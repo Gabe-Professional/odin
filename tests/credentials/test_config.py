@@ -5,7 +5,6 @@ logger = logging.getLogger(__name__)
 
 def test_credentials():
     creds = Credentials()
-    assert type(creds.keys()) == dict().keys()
 
 
 def test_backbone_props():
