@@ -228,7 +228,9 @@ def main():
     PROJECT_DIRECTORY = '~/projects/odin/rfj_alerting_app'
     project_dirs = setup_project_directory(PROJECT_DIRECTORY)
 
-    LABELS_DF = pd.read_csv(os.path.join(project_dirs['data'], 'name_labels.csv'))
+    LABELS_DF = pd.read_csv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+                                         'odin', 'data', 'name_labels.csv'))
+
     LABELS_DICT = {LABELS_DF.iloc[idx, :]['name']: LABELS_DF.iloc[idx, :]['label'] for idx in range(len(LABELS_DF))}
     NEW_DATE = (datetime.datetime.now() + timedelta(days=-1)).date()
     PLOT = False
