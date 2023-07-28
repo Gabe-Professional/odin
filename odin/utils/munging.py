@@ -12,9 +12,7 @@ from datetime import timedelta
 import datetime
 
 
-nltk.download('stopwords', quiet=True)
-stpwords = stopwords.words('english')
-lemmatizer = WordNetLemmatizer()
+
 
 
 REWARD_OFFER_NAMES = ["william higgins", "abd al-rahman al-maghrebi",
@@ -102,6 +100,9 @@ def parse_vector_string(vector_string):
 
 
 def text_tokenize(string, add_stopwords=list(), min_word_length=3):
+    nltk.download('stopwords', quiet=True)
+    stpwords = stopwords.words('english')
+    lemmatizer = WordNetLemmatizer()
 
     if len(add_stopwords) > 0:
         stpwords.extend(add_stopwords)

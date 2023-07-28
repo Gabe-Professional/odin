@@ -94,12 +94,14 @@ def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dic
                 count = es.count(query=query, index_pattern='pulse')
                 print(f'GETTING ELASTICSEARCH DATA: {count} results between {st} - {et}')
                 data = es.query(index_pattern='pulse', query=query)
+
                 tmp = make_pretty_df(data)
 
             tmp = make_labeled_df(tmp, labels_dict=labels_dict)
 
             pd.set_option('display.max_columns', None)
-            tmp['date'] = pd.to_datetime(tmp['timestamp']).dt.date
+            tmp['date'] = pd.to_datetime(tmp['timestamp'], format='mixed').dt.date
+
             # counts = tmp.groupby(by=['date',
             #                          'keyword_label']).uid.count().reset_index().rename(
             #     columns={'uid': 'count'}).sort_values('date')
@@ -134,7 +136,7 @@ def make_conf_dict(counts_df: pd.DataFrame, project_dirs, plot=False):
             dates = tmp['date']
             mu = np.mean(log_count)
 
-            conf = stats.t.interval(alpha=.95, df=len(log_count) - 1, loc=mu)
+            conf = stats.t.interval(confidence=.95, df=len(log_count) - 1, loc=mu)
             conf_dict[lab] = conf
 
             if plot:
@@ -208,7 +210,8 @@ def log_at_results(result):
     center_doc = result['cluster_center_docs']
     at_records_dict = make_records_dict(at_cols)
     at_creds = get_alerting_creds()
-    end_point = f'https://api.airtable.com/v0/{at_creds["base_id"]}/{at_creds["table_name"]}'
+    end_point = f'{at_creds["url"]}{at_creds["base_id"]}/{at_creds["table_names"][0]}'
+
     headers = {'Authorization': f'Bearer {at_creds["api_key"]}',
                'Content-Type': 'application/json'}
     at_records_dict['records'][0]['fields']['query_date'] = date

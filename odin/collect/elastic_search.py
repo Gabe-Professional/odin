@@ -97,7 +97,7 @@ class Db(object):
             warnings.simplefilter('ignore', ElasticsearchWarning)
 
         except Exception:
-            msg = 'Connection to DB failed...ensure you have proper credentials and are on VPN'
+            msg = 'Connection to DB failed...ensure you have proper credentials'
             self.logger.error(msg)
             raise AdminDbError(msg)
 
@@ -110,8 +110,6 @@ class Db(object):
     @staticmethod
     def Create(cluster='DEV'):
         """Create a New instance of the database for a given Postgres Cluster"""
-        # creds = Credentials().get_creds(cluster=cluster)
-
 
         logger.info(f'Creating database connection to Elastic {cluster}')
         bp = BackboneProperties()
@@ -133,7 +131,6 @@ class Db(object):
                 query = json.load(f)
         elif type(query) == dict:
             query = query
-        # todo: figure out the best way to load the query...either full dsl json or query['query']
         # todo: need to conditionally use search after and batch. If the results are less than the batch
         #  size, the function fails. To avoid, conditionally use batch size based on the count...
         #  if count is less than batch size, simply query as normal...
@@ -169,8 +166,7 @@ class Db(object):
         elif type(query) == dict:
             query = query
 
-        # res = self._conn.count(index=index_pattern, query=query)
-        size = self._conn.count(index=index_pattern, body=query)['count']
+        size = self._conn.count(index=index_pattern, query=query['query'])['count']
         return size
 
 

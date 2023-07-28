@@ -3,9 +3,13 @@ import os
 
 
 def get_alerting_creds():
-    fp = os.path.expanduser('~/.cred/rfj_alerting_at.json')
+    fp = os.path.expanduser('~/.odin/ODIN_CONFIG/at_api.json')
+    base_name = "rfj_alerting"
     with open(fp, 'r') as f:
-        cred_data = json.load(f)
+        data = json.load(f)
+    base_data = data["base_names"][base_name]
+    api = data['data']
+    cred_data = base_data | api
     return cred_data
 
 
