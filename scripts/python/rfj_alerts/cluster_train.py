@@ -60,7 +60,7 @@ def run():
     TRAIN_DATA_PKL = os.path.join(DIRS['data'], 'train_data.pkl')
     CLUSTER_PKL_FP = os.path.join(DIRS['data'], 'kmeans_model.pkl')
 
-    counts_df = pd.read_csv(os.path.join(DIRS['data'], 'daily_counts.csv'))
+    counts_df = pd.read_pickle(os.path.join(DIRS['data'], 'daily_counts.pkl'))
     alert_dates = counts_df.loc[counts_df['alert?'] == 1]['date'].unique().tolist()
     alert_kwds = counts_df.loc[counts_df['alert?'] == 1]['keyword_label'].unique().tolist()
 
