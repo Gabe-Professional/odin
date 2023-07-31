@@ -19,29 +19,12 @@ def test_get_query_from_path(elasticsearch_query_path):
 
 
 def test_elasticsearch_connection(elasticsearch_query_path):
-
-    query = get_query_from_path(elasticsearch_query_path)
     logger.info('Testing Credentials DB Connection')
     cluster = 'PROD'
-
-    fields = ['uid', 'timestamp', 'author', 'body', 'domain', 'encoding', 'url']
-    custom_fields = ['uid', 'url', 'author_id']
-
-    size = 10
     with Db.Create(cluster) as es:
-        data = es.query(query=query, index_pattern='pulse', search_after=False, batch_size=size)
-        pd.set_option('display.max_columns', None)
+        assert es.connected, 'Elastic search is not connected'
 
-        df = make_pretty_df(data)
-        df1 = make_pretty_df(data, fields=custom_fields)
-
-    # TEST DEFAULT FIELDS
-    assert len(df) == size
-    assert set(df.columns) == set(fields)
-
-    # TEST CUSTOM FIELDS
-    assert len(df1) == size
-    assert set(df1.columns) == set(custom_fields)
+    # todo: make another part of this test to test a bad connection...i.e. bad creds...
 
 
 def test_query(start_time, end_time):

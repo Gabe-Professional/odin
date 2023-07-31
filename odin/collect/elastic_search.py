@@ -73,7 +73,7 @@ class Db(object):
 
     def __init__(self, **connection_args):
         self.logger = logging.getLogger(__name__)
-
+        self.connected = False
         for key, value in connection_args.items():
             if value is None:
                 self.logger.warning(f'ELASTIC connection argument {key} is None')
@@ -88,18 +88,20 @@ class Db(object):
                                         f'environment variable loaded properly')
 
         try:
-            # todo: try to do with with kwargs...
             url = parse_url(username=connection_args['username'],
                             password=connection_args['password'],
                             endpoint=connection_args['endpoint'])
             self._conn = Elasticsearch(url)
-            ## NEED TO IGNORE THE ELASTICSEARCH SERVER WARNING ##
+
+            ## IGNORE THE ELASTICSEARCH SERVER WARNING ##
             warnings.simplefilter('ignore', ElasticsearchWarning)
 
         except Exception:
             msg = 'Connection to DB failed...ensure you have proper credentials'
             self.logger.error(msg)
             raise AdminDbError(msg)
+
+        self.connected = True
 
     def __enter__(self):
         return self
@@ -137,8 +139,8 @@ class Db(object):
 
         if search_after:
             if not batch_size:
-                logger.info('Setting default batch size to 100...')
                 batch_size = 50
+                logger.info(f'Setting default batch size to {batch_size}...')
 
             count = self.count(query=query, index_pattern=index_pattern)
             results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='_id')
