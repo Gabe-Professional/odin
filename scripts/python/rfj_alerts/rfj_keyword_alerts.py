@@ -63,7 +63,7 @@ def conf_intervals_from_category(df: pd.DataFrame, value, log=True):
 
 
 def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dict):
-    counts_pkl = os.path.join(project_dirs['data'], 'daily_counts.pkl')
+    counts_pkl = os.path.join(project_dirs['data'], 'model', 'daily_counts.pkl')
 
     end = pd.to_datetime(str(datetime.datetime.now().date())) + timedelta(seconds=-1)
     et = end.isoformat() + str('.999Z')
@@ -256,7 +256,7 @@ def main():
                                                                          row['count'], conf_dict=conf_dict), axis=1)
     counts_df = counts_df.sort_values(by=['date', 'keyword_label'])
 
-    counts_df.to_pickle(os.path.join(project_dirs['data'], 'daily_counts.pkl'))
+    counts_df.to_pickle(os.path.join(project_dirs['data'], 'model', 'daily_counts.pkl'))
 
     tmp = pd.DataFrame(counts_df.loc[(counts_df['date'].isin(log_dates)) |
                                      (counts_df['date'].isin(pd.to_datetime(log_dates).date))])
@@ -285,7 +285,7 @@ def main():
 
             X = np.append(X, ln_body_len, axis=1)
 
-            with open(os.path.join(project_dirs['data'], 'kmeans_model.pkl'), 'rb') as pkl:
+            with open(os.path.join(project_dirs['data'], 'model', 'kmeans_model.pkl'), 'rb') as pkl:
                 model = pickle.load(pkl)
                 centroids = model.cluster_centers_
                 pred = np.reshape(np.array(model.predict(X)), newshape=(X.shape[0], 1))

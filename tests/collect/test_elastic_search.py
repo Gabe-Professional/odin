@@ -16,15 +16,15 @@ pytest tests/module/file.py::test_function_name
 
 def test_get_query_from_path(elasticsearch_query_path):
     query = get_query_from_path(elasticsearch_query_path)
+    assert 'query' in query.keys(), 'query not in query dict'
 
 
 def test_elasticsearch_connection(elasticsearch_query_path):
     logger.info('Testing Credentials DB Connection')
     cluster = 'PROD'
     with Db.Create(cluster) as es:
-        assert es.connected, 'Elastic search is not connected'
-
-    # todo: make another part of this test to test a bad connection...i.e. bad creds...
+        status = es.connected
+    assert status, 'Elastic search is not connected'
 
 
 def test_query(start_time, end_time):
@@ -35,8 +35,8 @@ def test_query(start_time, end_time):
     with Db.Create('PROD') as es:
         count = es.count(query, index_pattern='pulse')
         data = es.query(query=query, index_pattern='pulse', search_after=True, batch_size=100)
-        df = make_pretty_df(data)
-    assert count == len(df) == len(data)
+    assert len(data) != 0, 'QUERY did not return any data'
+    assert len(data) == count, 'QUERY and COUNT did not return the same amount of data'
 
 
 def test_build_body_kw_query(start_time, end_time):

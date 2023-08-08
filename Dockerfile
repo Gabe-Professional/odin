@@ -11,6 +11,7 @@ RUN mkdir /home/user/projects
 RUN mkdir /home/user/projects/odin
 RUN mkdir /home/user/projects/odin/rfj_alerting_app
 RUN mkdir /home/user/projects/odin/rfj_alerting_app/data
+RUN mkdir /home/user/projects/odin/rfj_alerting_app/data/model
 ENV PATH="/home/user/build/odin/venv/bin:$PATH"
 RUN pip3 install -r requirements.txt
 RUN pip3 install -e .

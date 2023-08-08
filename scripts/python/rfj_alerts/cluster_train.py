@@ -57,10 +57,10 @@ def run():
     LABELS_DICT = {LABELS_DF.iloc[idx, :]['name']: LABELS_DF.iloc[idx, :]['label'] for idx in range(len(LABELS_DF))}
 
     DIRS = setup_project_directory(PROJECT_DIRECTORY)
-    TRAIN_DATA_PKL = os.path.join(DIRS['data'], 'train_data.pkl')
-    CLUSTER_PKL_FP = os.path.join(DIRS['data'], 'kmeans_model.pkl')
+    TRAIN_DATA_PKL = os.path.join(DIRS['data'], 'cluster_train', 'train_data.pkl')
+    CLUSTER_PKL_FP = os.path.join(DIRS['data'], 'cluster_train', 'kmeans_model.pkl')
 
-    counts_df = pd.read_pickle(os.path.join(DIRS['data'], 'daily_counts.pkl'))
+    counts_df = pd.read_pickle(os.path.join(DIRS['data'], 'model','daily_counts.pkl'))
     alert_dates = counts_df.loc[counts_df['alert?'] == 1]['date'].unique().tolist()
     alert_kwds = counts_df.loc[counts_df['alert?'] == 1]['keyword_label'].unique().tolist()
 
@@ -109,7 +109,7 @@ def run():
         with open(TRAIN_DATA_PKL, 'rb') as pkl:
             print('loading training features from pkl')
             X = pickle.load(pkl)
-    sample_df = pd.read_csv(os.path.join(DIRS['data'], 'training_sample.csv'))
+    sample_df = pd.read_csv(os.path.join(DIRS['data'], 'cluster_train', 'training_sample.csv'))
 
     #### TRAIN A CLUSTERING MODEL FOR THE DAYS KEYWORDS ALERTED ON...
 
