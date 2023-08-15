@@ -52,7 +52,7 @@ cd odin
 then run:
 
 ```bash
-$ pip install -e . --no-deps
+$ pip install -e .
 ```
 
 This will install the application on your machine and you will be able to run the `odin` commands and subcommands.

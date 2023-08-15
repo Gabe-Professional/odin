@@ -53,7 +53,7 @@ def collect_main(args):
                 # todo: need to troubleshoot...returning same number or results for different end dates...
                 count = db.count(query=query, index_pattern='pulse')
                 logger.info(f'GETTING {count} RESULTS FROM ELASTICSEARCH')
-                data = db.query(query=query, index_pattern='pulse', batch_size=1000)
+                data = db.query(query=query, index_pattern='pulse')
                 # todo: should get rid of the pretty parameter and always use the function...
                 df = make_pretty_df(data)
                 if save:

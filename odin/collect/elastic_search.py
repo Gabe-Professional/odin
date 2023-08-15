@@ -1,4 +1,7 @@
 import logging
+import functools
+import sys
+import time
 import os
 import json
 import pandas as pd
@@ -6,7 +9,7 @@ from odin.credentials.config import BackboneProperties
 from elasticsearch import Elasticsearch
 import warnings
 from elasticsearch.exceptions import ElasticsearchWarning
-
+from multiprocessing.pool import ThreadPool
 logger = logging.getLogger(__name__)
 cwd = os.getcwd()
 
@@ -69,6 +72,39 @@ def make_pretty_df(data, fields=[]):
     return df
 
 
+def progress_bar(func):
+    def time_it(i):
+        time.sleep(1)
+        length = 60
+        i += 1
+        bar = length
+        if i == length + 1:
+            i = 1
+        # sys.stdout.write('\r{}'.format('.' * i))
+        sys.stdout.write('\r{} Elapsed time: {}'.format('█' * i + '-' * (length - i), i))
+
+        sys.stdout.flush()
+        return i
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print("Running process: {}".format(func.__name__))
+        proc_start = time.time()
+        pool = ThreadPool(processes=1)
+        t1 = pool.apply_async(func, args, kwargs)  # tuple of args for foo
+        i = 0
+        while not t1.ready():
+            i = time_it(i)
+        v = t1.get()
+        sys.stdout.write('\n')
+        proc_stop = time.time()
+        logger.debug("Process {} took {} seconds to run.".format(func.__name__, proc_stop - proc_start))
+        pool.close()
+        return v
+
+    return wrapper
+
+
 class Db(object):
 
     def __init__(self, **connection_args):
@@ -124,6 +160,7 @@ class Db(object):
 
         return Db(**connection_info)
 
+    @progress_bar
     def query(self, query, index_pattern, batch_size=None, search_after=True):
         """Helper function to query Elasticsearch easily...
         """
@@ -139,7 +176,7 @@ class Db(object):
 
         if search_after:
             if not batch_size:
-                batch_size = 50
+                batch_size = 10
                 logger.info(f'Setting default batch size to {batch_size}...')
 
             count = self.count(query=query, index_pattern=index_pattern)

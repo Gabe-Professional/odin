@@ -23,15 +23,15 @@ jobs:
       run: bash ./docker-build.sh
 
 
-  deploy:
-    needs: build
-    runs-on: ubunto-lastes
-    steps:
-      - name: Checkout Files
-        uses: actions/checkout@v3
-
-      - name: Get tag name
-        uses: olegtarsov/get-tag@v2
+#  deploy:
+#    needs: build
+#    runs-on: ubunto-lastes
+#    steps:
+#      - name: Checkout Files
+#        uses: actions/checkout@v3
+#
+#      - name: Get tag name
+#        uses: olegtarsov/get-tag@v2
 #  deploy:
 #    needs: build
 #    runs-on: ubuntu-latest
