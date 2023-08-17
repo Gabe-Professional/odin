@@ -50,7 +50,7 @@ def test_query(start_time, end_time):
 
     with Db.Create('PROD') as es:
         count = es.count(query, index_pattern='pulse')
-        data = es.query(query=query, index_pattern='pulse', search_after=True, batch_size=100)
+        data = es.query(query=query, index_pattern='pulse')
     assert len(data) != 0, 'QUERY did not return any data'
     assert len(data) == count, 'QUERY and COUNT did not return the same amount of data'
 

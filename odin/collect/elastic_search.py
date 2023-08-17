@@ -173,13 +173,12 @@ class Db(object):
         # todo: need to conditionally use search after and batch. If the results are less than the batch
         #  size, the function fails. To avoid, conditionally use batch size based on the count...
         #  if count is less than batch size, simply query as normal...
-
+        count = self.count(query=query, index_pattern=index_pattern)
         if search_after:
             if not batch_size:
                 batch_size = 10
                 logger.info(f'Setting default batch size to {batch_size}...')
 
-            count = self.count(query=query, index_pattern=index_pattern)
             results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='_id')
             data = results['hits']['hits'][:]
             _id = results['hits']['hits'][batch_size - 1]['_id']
