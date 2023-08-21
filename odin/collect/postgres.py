@@ -2,6 +2,10 @@ import logging
 import warnings
 import pandas as pd
 import psycopg2
+import functools
+import time
+import sys
+from multiprocessing.pool import ThreadPool
 from odin.credentials.config import BackboneProperties
 logger = logging.getLogger(__name__)
 
@@ -12,6 +16,39 @@ class AdminDbError(Exception):
 
 class AdminDBWarning(UserWarning):
     pass
+
+
+def progress_bar(func):
+    def time_it(i):
+        time.sleep(1)
+        length = 60
+        i += 1
+        bar = length
+        if i == length + 1:
+            i = 1
+        # sys.stdout.write('\r{}'.format('.' * i))
+        sys.stdout.write('\r{} Elapsed time: {}'.format('█' * i + '-' * (length - i), i))
+
+        sys.stdout.flush()
+        return i
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print("Running process: {}".format(func.__name__))
+        proc_start = time.time()
+        pool = ThreadPool(processes=1)
+        t1 = pool.apply_async(func, args, kwargs)  # tuple of args for foo
+        i = 0
+        while not t1.ready():
+            i = time_it(i)
+        v = t1.get()
+        sys.stdout.write('\n')
+        proc_stop = time.time()
+        logger.debug("Process {} took {} seconds to run.".format(func.__name__, proc_stop - proc_start))
+        pool.close()
+        return v
+
+    return wrapper
 
 
 class Db(object):
@@ -63,6 +100,7 @@ class Db(object):
         return self._conn.cursor()
 
     ### QUERY FUNCTIONS ###
+    @progress_bar
     def get_messages_by_datetime(self, start_datetime, end_datetime, direction='in', pretty=True):
         """Helper function for getting messages from the english engagement messages table"""
         logger.info(f'Getting messages from Postgres between: {start_datetime} - {end_datetime}')
@@ -94,6 +132,7 @@ class Db(object):
         cursor.close()
         return data
 
+    @progress_bar
     def query(self, query_statement, query_parameters):
 
         # todo: make a unit test for this...
@@ -103,6 +142,7 @@ class Db(object):
         cursor.close()
         return val
 
+    @progress_bar
     def get_messages_from_contact_id(self, contact_id, pretty=True):
         table = "messages"
         # data = []
@@ -117,6 +157,7 @@ class Db(object):
         cursor.close()
         return data
 
+    @progress_bar
     def get_contacts_by_datetime(self, start_datetime, end_datetime, pretty=True):
         table = "contacts"
         fields = ["contact_id", "contact_urn", "created_time"]

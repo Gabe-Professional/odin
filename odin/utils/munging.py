@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import nltk
 import numpy as np
@@ -10,9 +11,7 @@ import re
 from odin.collect.elastic_search import Db, build_body_kw_query, make_pretty_df
 from datetime import timedelta
 import datetime
-
-
-
+logger = logging.getLogger(__name__)
 
 
 REWARD_OFFER_NAMES = ["william higgins", "abd al-rahman al-maghrebi",
@@ -212,3 +211,4 @@ def make_labeled_df(df: pd.DataFrame, labels_dict):
 
     df = df.drop_duplicates(subset=['uid', 'keyword_label']).reset_index(drop=True)
     return df
+
