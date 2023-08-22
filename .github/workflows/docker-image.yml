@@ -11,34 +11,31 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  IMAGE_NAME: odin-analytics
+  REGISTRY_NAME: odin
+  DOCKER_BUILDKIT: 1
 jobs:
 
-  build:
+  build-push:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: bash ./docker-build.sh
+    - name: Login to registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ secrets.REGISTRY_ENDPOINT }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Build and push image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        tags: ${{ secrets.REGISTRY_ENDPOINT }}/${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME}}:latest
 
 
-#  deploy:
-#    needs: build
-#    runs-on: ubunto-lastes
-#    steps:
-#      - name: Checkout Files
-#        uses: actions/checkout@v3
-#
-#      - name: Get tag name
-#        uses: olegtarsov/get-tag@v2
-#  deploy:
-#    needs: build
-#    runs-on: ubuntu-latest
-#    steps:
-#    - uses: actions/checkout@v3
-#    - name: Load DO
-#      env:
-#        THIS_TEST: ${{ secrets.THIS_IS_SECRET }}
-#      run: |
-#        echo "$THIS_TEST"
+
