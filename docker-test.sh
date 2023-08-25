@@ -1,4 +1,3 @@
-#!/bin/bash
-set -xe
+docker build -t odin-analytics-tests .
 
-docker run odin-analytics $*
+docker run --rm odin-analytics-tests
