@@ -1,0 +1,9 @@
+[Unit]
+Description=Odin analysis service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/odin-analysis
+User=odin-analytics
+WorkingDirectory=/home/odin-analytics
+

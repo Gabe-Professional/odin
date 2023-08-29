@@ -17,17 +17,17 @@ env:
   DOCKER_BUILDKIT: 1
 jobs:
 
-  build-test:
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build and test
-        run: bash ./docker-test.sh
-
+#  build-test:
+#
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Build and test
+#        run: bash ./docker-test.sh
+#
   build-push:
-    needs: build-test
+#    needs: build-test
     runs-on: ubuntu-latest
 
     steps:

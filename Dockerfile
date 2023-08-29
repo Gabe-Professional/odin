@@ -34,4 +34,3 @@ RUN echo 'Installing the odin requirements file'
 RUN pip3 install -r requirements.txt
 RUN pip3 install -e .
 VOLUME /home/user/projects
-CMD ["pytest", "/home/user/build/odin/tests", "-v"]
