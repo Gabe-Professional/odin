@@ -11,7 +11,7 @@
 # ################################################################################
 
 
-FROM ubuntu:22.04
+FROM ubuntu:22.04 as build
 RUN apt update
 RUN echo 'Installing python3...'
 RUN apt -y install python3 python3-pip bash python3.10-venv
@@ -34,3 +34,16 @@ RUN echo 'Installing the odin requirements file'
 RUN pip3 install -r requirements.txt
 RUN pip3 install -e .
 VOLUME /home/user/projects
+# build the testing stage
+FROM ubuntu:22.04 AS test
+RUN apt update
+RUN echo 'Installing python3...'
+RUN apt -y install python3 python3-pip bash python3.10-venv
+RUN useradd -ms /bin/bash user
+ADD . /home/user/test/odin
+WORKDIR /home/user/test/odin
+RUN python3 -m venv venv
+ENV PATH="/home/user/test/odin/venv/bin:$PATH"
+RUN pip3 install -r requirements.txt
+RUN pip3 install -e .
+CMD ["pytest", "/home/user/test/odin/tests", "-v"]

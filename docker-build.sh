@@ -1,2 +1,2 @@
-docker build -t odin-analytics .
+docker build --target build -t odin-analytics .
 
