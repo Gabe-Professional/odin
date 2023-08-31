@@ -1,12 +1,6 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches:
-      - '*'         # matches every branch that doesn't contain a '/'
-      - '*/*'       # matches every branch containing a single '/'
-      - '**'        # matches every branch
-      - '!master'   # excludes master
 
   pull_request:
     branches: [ "master" ]
@@ -15,36 +9,21 @@ env:
   IMAGE_NAME: odin-analytics
   REGISTRY_NAME: odin
   DOCKER_BUILDKIT: 1
-jobs:
-#
-#  build-test:
-#
-#    runs-on: ubuntu-latest
-#    env:
-#      IMAGE_NAME: odin-analytics-test
-#      REGISTRY_NAME: odin
-#      DOCKER_BUILDKIT: 0
-#
-#    steps:
-#      - name: Build and test
-#        uses: docker/login-action@v2
-#        with:
-#          registry: ${{ secrets.REGISTRY_ENDPOINT }}
-#          username: ${{ secrets.REGISTRY_USERNAME }}
-#          password: ${{ secrets.REGISTRY_PASSWORD }}
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#      - name: Build and test
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: .
-#          push: false
-#          tags: ${{ secrets.REGISTRY_ENDPOINT }}/${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME}}:latest
 
-#        run: bash ./docker-test.sh
+jobs:
+
+  build-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run tests
+        run: bash ./docker-test.sh
 
   build-push:
-#    needs: build-test
+    needs: build-test
     runs-on: ubuntu-latest
 
     steps:
@@ -59,7 +38,7 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v4
         with:
-          id: build
+          target: build
           context: .
           push: true
           tags: ${{ secrets.REGISTRY_ENDPOINT }}/${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME}}:latest
