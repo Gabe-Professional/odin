@@ -161,9 +161,11 @@ class Db(object):
         return Db(**connection_info)
 
     @progress_bar
-    def query(self, query, index_pattern, batch_size=None, search_after=True):
+    def query(self, query, index_pattern):
         """Helper function to query Elasticsearch easily...
         """
+        search_after = True
+        batch_size = None
         warnings.simplefilter(action='ignore')
         if type(query) == str:
             with open(query) as f:
@@ -174,27 +176,30 @@ class Db(object):
         #  size, the function fails. To avoid, conditionally use batch size based on the count...
         #  if count is less than batch size, simply query as normal...
         count = self.count(query=query, index_pattern=index_pattern)
-        if search_after:
-            if not batch_size:
-                batch_size = 10
-                logger.info(f'Setting default batch size to {batch_size}...')
-
-            results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='_id')
+        data = []
+        if count < 10000:
+            logger.info('Setting batch size to max records...10,000')
+            results = self._conn.search(index=index_pattern, query=query['query'], size=10000)
             data = results['hits']['hits'][:]
-            _id = results['hits']['hits'][batch_size - 1]['_id']
-            logging.info('Batching data from Elasticsearch...')
-            while count > len(data):
-                results = self._conn.search(index=index_pattern, query=query['query'],
-                                            size=batch_size, sort='_id', search_after=[_id])
-                current_batch = len(results['hits']['hits'][:])
-                _id = results['hits']['hits'][current_batch - 1]['_id']
-                data += results['hits']['hits'][:]
         else:
-            if not batch_size:
-                logger.info('Setting batch size to max records...10,000')
-                batch_size = 10000
-            results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size)
-            data = results['hits']['hits'][:]
+            # todo: this is broken because it is unable to sort on _id...to run the same way it will need updated cluster
+            #  settings to indices.id_field_data.enabled
+            logger.info(f'Results count is {count}. Query is not supported for queries greater than 10k at this time')
+            # if search_after:
+            #     if not batch_size:
+            #         batch_size = 10
+            #         logger.info(f'Setting default batch size to {batch_size}...')
+            #
+            #     results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='_id')
+            #     data = results['hits']['hits'][:]
+            #     _id = results['hits']['hits'][batch_size - 1]['_id']
+            #     logging.info('Batching data from Elasticsearch...')
+            #     while count > len(data):
+            #         results = self._conn.search(index=index_pattern, query=query['query'],
+            #                                     size=batch_size, sort='_id', search_after=[_id])
+            #         current_batch = len(results['hits']['hits'][:])
+            #         _id = results['hits']['hits'][current_batch - 1]['_id']
+            #         data += results['hits']['hits'][:]
         return data
 
     def count(self, query, index_pattern):
