@@ -1,3 +1,9 @@
 #!/bin/sh
-docker pull registry.appbucket.io/odin/odin-analytics
-#docker run --rm -it -v .:/foobar registry.appbucket.io/odin/odin-analytics
+CONTAINER="registry.appbucket.io/odin/odin-analytics:latest"
+COMMAND="python3 /home/user/build/odin/scripts/python/rfj_alerts/rfj_keyword_alerts.py"
+
+docker pull ${CONTAINER}
+
+docker run --rm -t -v ${HOME}/.odin:/home/user/.odin \
+                    -v ${HOME}/projects/odin/rfj_alerting_app/data/model:/home/user/projects/odin/rfj_alerting_app/data/model ${CONTAINER} bash -c "${COMMAND}"
+
