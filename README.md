@@ -8,9 +8,12 @@ ODIN -- Module to support analytics
    2. [Getting VPN Access](#getting-vpn-access)
    3. [Setting up](#setting-up)
    4. [General User Installation](#general-user-installation)
+   5. [Developer Installation](#developer-installation)
 3. [Usage](#usage)
 4. [Contributing to ODIN](#contributing-to-odin)
-   1. [Developer Installation](#developer-installation)
+   1. [Development](#development)
+   2. [Testing](#testing)
+   3. [Writing Tests](#writing-tests)
 
 # Overview
 This is a library of analytics tools used extensively by Odin analysts. This package serves as a library of python tooling used for querying, summarizing, and visualizing `odin` data from both ElasticSearch and Postgres databases. Additionally, python scripting, which is available in this library, makes use of the `odin` package that supports regular tasking regarding Odin data.  
