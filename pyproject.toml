@@ -2,9 +2,12 @@
 requires = ["setuptools>=64.0.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools-git-versioning]
+enabled = true
+
 [project]
 name = "odin"
-version = "0.0.1"
+dynamic = ["version"]
 description = "Odin analytics cli tools"
 readme = "README.md"
 authors = [{ name = "Gabe McBride", email = "gabriel.mcbride@twosixtech.com" }]

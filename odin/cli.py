@@ -2,6 +2,9 @@ import argparse
 from odin.collect.cli import setup_collect_parser
 from odin.utils.cli import setup_project_parser
 import logging
+from importlib.metadata import version
+import os
+import sys
 logger = logging.getLogger(__name__)
 
 
@@ -62,23 +65,23 @@ def run():
     """ODIN Command Line Interface (CLI) Application
 ----------------------------------------------------------------------------------------------
 This is the main entrypoint into the odin CLI applications. Note all odin cli will
-start with `odin`.
+start with `%(prog)s`.
 
 USAGE
 -----
     To Run this application and get help:
-    $ odin -h
+    $ %(prog)s -h
 
 NOTES
 -----
-    The `odin` CLI has sub commands, each of which contain their own help information.  To
+    The `%(prog)s` CLI has sub commands, each of which contain their own help information.  To
     figure out how to run a given command just keep using -h as you move down the tree until you
     have the full command flushed out.
 
 ----------------------------------------------------------------------------------------------
 
     """
-    epilog = "\n For more information, "
+    epilog = f"\n For more information on %(prog)s {version('odin')}, "
     epilog += "contact Gabe McBride <gabriel.mcbride@twosixtech.com>"
     main_parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                           description=run.__doc__,
@@ -86,6 +89,7 @@ NOTES
 
     main_parser.add_argument("-v", "--verbose", action='count', default=0,
                              help="Logging Verbosity (Default: %(default)s")
+    main_parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + version('odin'))
     # SET LOGGING
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s--%(name)s:%(levelname)s:--%(message)s')
