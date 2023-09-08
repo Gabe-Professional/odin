@@ -10,16 +10,6 @@ logger = logging.getLogger(__name__)
 def collect_main(args):
     """
     Use these arguments to query Odin data, create project directories, and summarize queried data
-
-    TODO: improvements
-    todo: summarizing data functions...
-    todo: saving data functions...
-
-
-    :param args:
-    :type args:
-    :return:
-    :rtype:
     """
     # MAIN INPUTS
     database = args.database

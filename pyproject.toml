@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=64.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "odin"
+version = "0.0.1"
+description = "Odin analytics cli tools"
+readme = "README.md"
+authors = [{ name = "Gabe McBride", email = "gabriel.mcbride@twosixtech.com" }]
+
+[tool.setuptools.packages.find]
+exclude = ["etc", "scripts"]
+
+[project.scripts]
+odin = "odin.cli:run"
