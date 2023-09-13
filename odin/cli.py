@@ -3,6 +3,7 @@ from odin.collect.cli import setup_collect_parser
 from odin.utils.cli import setup_project_parser
 import logging
 from importlib.metadata import version
+from .groups import DateParent
 import os
 import sys
 logger = logging.getLogger(__name__)
@@ -39,14 +40,14 @@ def error_message(msg):
     return "{}".format(msg)+"."*5+"{}{}ERROR{}".format(bcolors.UNDERLINE, bcolors.FAIL, bcolors.ENDC)
 
 
-def setup_parser(subp):
+def setup_parser(main_parser, parents=[]):
     # todo: need to make a better argument parser and subparsers...
     logging.info('Attempting to Load Subcommands')
-    parser = subp.add_subparsers()
-    setup_collect_parser(parser)
-    setup_project_parser(parser)
+    sub_p = main_parser.add_subparsers(dest='cmd')
+    setup_collect_parser(sub_p, parents)
+    setup_project_parser(sub_p, parents)
 
-    args = subp.parse_args()
+    args = main_parser.parse_args()
     if args.verbose == 0:
         logging.getLogger().setLevel(logging.WARNING)
         logging.warning('Setting log level to: WARNING')
@@ -83,21 +84,25 @@ NOTES
     """
     epilog = f"\n For more information on %(prog)s {version('odin')}, "
     epilog += "contact Gabe McBride <gabriel.mcbride@twosixtech.com>"
+
     main_parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                           description=run.__doc__,
                                           epilog=epilog)
 
-    main_parser.add_argument("-v", "--verbose", action='count', default=0,
-                             help="Logging Verbosity (Default: %(default)s")
-    main_parser.add_argument('-V', '--version', action='version', version='%(prog)s ' + version('odin'))
+    general_options = main_parser.add_argument_group("general arguments")
+    general_options.add_argument('--version', '-V', action='version', version='%(prog)s ' + version('odin'))
+
+    verbose_parser = argparse.ArgumentParser(add_help=False)
+    verbose_parser.add_argument("--verbose", "-v", action='count', default=0,
+                                help="Logging Verbosity (Default: %(default)s)")
+
     # SET LOGGING
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s--%(name)s:%(levelname)s:--%(message)s')
     logging.getLogger().setLevel(logging.INFO)
 
-    # todo: test out parents argument
     try:
-        setup_parser(main_parser)
+        setup_parser(main_parser, [verbose_parser])
     except ValidationException as e:
         logging.error(e)
     except Exception as e:

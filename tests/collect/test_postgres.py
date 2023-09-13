@@ -11,10 +11,9 @@ logger = logging.getLogger(__name__)
 def test_progress_bar(tmp_dir, start_time, end_time):
 
     subdirs = ['test_1', 'test_2']
-    direction = 'in'
     cmd = 'odin collect '
-    cmd += f'-d {tmp_dir} -sd {subdirs[0]} {subdirs[1]} -db postgres ' \
-           f'-st {start_time} -et {end_time} -md {direction}'
+    cmd += f'--postgres -d {tmp_dir} -sd {subdirs[0]} {subdirs[1]} ' \
+           f'-a {start_time} -b {end_time} -i'
 
     output = subprocess.check_output(cmd, shell=True)
     for o in str(output, 'UTF-8').split('\n'):

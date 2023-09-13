@@ -7,50 +7,58 @@ from odin.collect.elastic_search import build_body_kw_query
 from odin.collect.elastic_search import make_pretty_df
 logger = logging.getLogger(__name__)
 
+
 def collect_main(args):
     """
     Use these arguments to query Odin data, create project directories, and summarize queried data
     """
     # MAIN INPUTS
-    database = args.database
-    start_time = args.start_time
+    start_time = args.start
     cluster = args.cluster
-    end_time = args.end_time
+    end_time = args.stop
     subdirs = args.sub_dirs
-    directories = setup_project_directory(directory=args.project_directory, subdirs=subdirs)
-    direction = args.message_direction
     keywords = args.keywords
-    save = args.download
+    directories = setup_project_directory(directory=args.project_dir, subdirs=subdirs)
 
-    # todo: deal with data better...
     data = {}
-    if database == 'postgres':
-        with PG.Create(cluster) as db:
+    if args.postgres:
+        direction = None
 
-            data = db.get_messages_by_datetime(start_datetime=start_time, end_datetime=end_time,
-                                               direction=direction, pretty=True)
+        if args.download:
+            logger.setLevel(level='DEBUG')
+            logger.debug(f'Downloading data directly on the odin cli is not an option at this time. '
+                         f'Please run your command again without the -dl option')
+        else:
+            if args.message_in:
+                direction = 'in'
 
-            # todo: add saving or showing pretty data to demo...
+            elif args.message_out:
+                direction = 'out'
 
-    elif database == 'elastic':
+            with PG.Create(cluster) as db:
+
+                data = db.get_messages_by_datetime(start_datetime=start_time, end_datetime=end_time,
+                                                   direction=direction, pretty=True)
+
+    elif args.elastic:
         if not keywords:
-            # logger.setLevel(level='DEBUG')
-            logger.debug(f'Please provide a list of keywords to us in {database}')
+            logger.setLevel(level='DEBUG')
+            logger.debug(f'Please provide a list of keywords to us in {args.elastic}')
 
         else:
             query = build_body_kw_query(keywords=keywords, start_time=start_time, end_time=end_time)
             with ES.Create(cluster) as db:
-                # todo: need to troubleshoot...returning same number or results for different end dates...
                 count = db.count(query=query, index_pattern='pulse')
                 logger.info(f'GETTING {count} RESULTS FROM ELASTICSEARCH')
                 data = db.query(query=query, index_pattern='pulse')
-                # todo: should get rid of the pretty parameter and always use the function...
                 df = make_pretty_df(data)
-                if save:
+                if args.download:
                     logger.info(f'Saving data to {directories[list(directories)[0]]}')
                     df.to_csv(os.path.join(directories[list(directories)[0]],
-                                           f'{start_time}_{end_time}_from_{database}.csv'),
+                                           f'{start_time}_{end_time}_from_{"elasticsearch"}.csv'),
                               index=False)
+                else:
+                    logger.info(f'\n {df}')
 
     return data
 

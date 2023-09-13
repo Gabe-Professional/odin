@@ -19,7 +19,7 @@ pytest tests/module/file.py::test_function_name
 def test_progress_bar(tmp_dir):
     # todo: need to query less data
     cmd = 'odin collect '
-    cmd += f'-d {tmp_dir} -sd test1 test2 -st 2023-08-11T00:00:10.000Z -et 2023-08-11T00:05:00.000Z -db elastic -c PROD -kw biden nato'
+    cmd += f'--elastic -d {tmp_dir} -sd test1 test2 -a 2023-08-11T00:00:10.000Z -b 2023-08-11T00:05:00.000Z -c PROD -kw biden nato'
     output = subprocess.check_output(cmd, shell=True)
     for o in str(output, 'UTF-8').split('\n'):
         print(o)

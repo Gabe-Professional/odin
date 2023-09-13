@@ -6,10 +6,9 @@ from tests.fixture import start_time, end_time, tmp_dir
 
 def test_collect_cli(start_time, end_time, tmp_dir):
     subdirs = ['test_1', 'test_2']
-    direction = 'in'
     cmd = 'odin collect '
-    cmd += f'-d {tmp_dir} -sd {subdirs[0]} {subdirs[1]} -db postgres ' \
-           f'-st {start_time} -et {end_time} -md {direction} -v'
+    cmd += f'--postgres -d {tmp_dir} -sd {subdirs[0]} {subdirs[1]} ' \
+           f'-a {start_time} -b {end_time} -i -v'
 
     output = subprocess.check_output(cmd, shell=True)
     for o in str(output, 'UTF-8').split('\n'):

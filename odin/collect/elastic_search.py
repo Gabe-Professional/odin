@@ -172,34 +172,32 @@ class Db(object):
                 query = json.load(f)
         elif type(query) == dict:
             query = query
-        # todo: need to conditionally use search after and batch. If the results are less than the batch
-        #  size, the function fails. To avoid, conditionally use batch size based on the count...
-        #  if count is less than batch size, simply query as normal...
         count = self.count(query=query, index_pattern=index_pattern)
         data = []
+        logger.info(f'Your query has {count} results')
         if count < 10000:
             logger.info('Setting batch size to max records...10,000')
             results = self._conn.search(index=index_pattern, query=query['query'], size=10000)
             data = results['hits']['hits'][:]
         else:
-            # todo: this is broken because it is unable to sort on _id...to run the same way it will need updated cluster
-            #  settings to indices.id_field_data.enabled
-            logger.info(f'Results count is {count}. Query is not supported for queries greater than 10k at this time')
-            # if search_after:
-            #     if not batch_size:
-            #         batch_size = 10
-            #         logger.info(f'Setting default batch size to {batch_size}...')
-            #
-            #     results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='_id')
-            #     data = results['hits']['hits'][:]
-            #     _id = results['hits']['hits'][batch_size - 1]['_id']
-            #     logging.info('Batching data from Elasticsearch...')
-            #     while count > len(data):
-            #         results = self._conn.search(index=index_pattern, query=query['query'],
-            #                                     size=batch_size, sort='_id', search_after=[_id])
-            #         current_batch = len(results['hits']['hits'][:])
-            #         _id = results['hits']['hits'][current_batch - 1]['_id']
-            #         data += results['hits']['hits'][:]
+            logger.info(f'Results count is greater than 10k. Batching your query, please wait...')
+            if search_after:
+                if not batch_size:
+                    batch_size = 1000
+                    logger.info(f'Setting default batch size to {batch_size}...')
+
+                results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='system_timestamp')
+                data = results['hits']['hits'][:]
+                _sys_time = results['hits']['hits'][batch_size - 1]['_source']['system_timestamp']
+
+                logging.info('Batching data from Elasticsearch...')
+                while count > len(data):
+                    results = self._conn.search(index=index_pattern, query=query['query'],
+                                                size=batch_size, sort='system_timestamp', search_after=[_sys_time])
+                    current_batch = len(results['hits']['hits'][:])
+                    _sys_time = results['hits']['hits'][current_batch - 1]['_source']['system_timestamp']
+                    data += results['hits']['hits'][:]
+
         return data
 
     def count(self, query, index_pattern):

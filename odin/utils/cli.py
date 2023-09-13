@@ -1,10 +1,11 @@
 from odin.utils.projects import project_main
 
 
-def setup_project_parser(parser):
-    project_parser = parser.add_parser('project')
-    project_parser.add_argument("-v", "--verbose", action='count', default=0,
-                                help="Logging Verbosity (Default: %(default)s")
+def setup_project_parser(parser, parents=[]):
+    project_parser = parser.add_parser('project',
+                                       help='sub-command for creating new analytics projects',
+                                       parents=parents)
+
     project_parser.add_argument('--project_directory',
                                 help='directory path to where you would like to start your project',
                                 required=True)

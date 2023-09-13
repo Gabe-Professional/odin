@@ -4,6 +4,7 @@ logger = logging.getLogger(__name__)
 
 
 def setup_project_directory(directory, subdirs=None):
+
     directory = os.path.expanduser(directory)
 
     if not os.path.exists(directory):
