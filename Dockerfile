@@ -13,6 +13,8 @@
 
 FROM ubuntu:22.04 as build
 RUN apt update
+RUN apt install -y git
+RUN apt-get update
 RUN echo 'Installing python3...'
 RUN apt -y install python3 python3-pip bash python3.10-venv
 RUN useradd -ms /bin/bash user
@@ -37,6 +39,8 @@ VOLUME /home/user/projects
 # build the testing stage
 FROM ubuntu:22.04 AS test
 RUN apt update
+RUN apt install -y git
+RUN apt-get update
 RUN echo 'Installing python3...'
 RUN apt -y install python3 python3-pip bash python3.10-venv
 RUN useradd -ms /bin/bash user

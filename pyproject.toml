@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64.0.0", "setuptools-git-versioning<2"]
+requires = ["setuptools>=64.0.0", "setuptools-git-versioning<2", "setuptools-scm>=7.1.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools-git-versioning]
@@ -11,6 +11,12 @@ dynamic = ["version"]
 description = "Odin analytics cli tools"
 readme = "README.md"
 authors = [{ name = "Gabe McBride", email = "gabriel.mcbride@twosixtech.com" }]
+
+[project.entry-points."distutils.setup_keywords"]
+use_scm_version = "setuptools_scm._integration.setuptools:version_keyword"
+
+[tool.setuptools_scm]
+write_to = "odin/_version.py"
 
 [tool.setuptools.packages.find]
 exclude = ["etc", "scripts"]
