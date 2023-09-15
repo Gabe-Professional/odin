@@ -3,7 +3,7 @@ import os
 import odin.utils.projects as projects
 import shutil
 import logging
-from tests.fixture import tmp_dir
+from tests.conftest import tmp_dir
 logger = logging.getLogger('odin')
 
 

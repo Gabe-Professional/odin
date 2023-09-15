@@ -1,18 +1,17 @@
 import logging
 import pandas as pd
 from odin.collect.postgres import Db
-from tests.fixture import start_time, end_time, tmp_dir
 import subprocess
 import shutil
 import os
 logger = logging.getLogger(__name__)
 
 
-def test_progress_bar(tmp_dir, start_time, end_time):
+def test_progress_bar(tmpdir, start_time, end_time):
 
     subdirs = ['test_1', 'test_2']
     cmd = 'odin collect '
-    cmd += f'--postgres -d {tmp_dir} -sd {subdirs[0]} {subdirs[1]} ' \
+    cmd += f'--postgres -d {tmpdir} -sd {subdirs[0]} {subdirs[1]} ' \
            f'-a {start_time} -b {end_time} -i'
 
     output = subprocess.check_output(cmd, shell=True)
@@ -21,8 +20,8 @@ def test_progress_bar(tmp_dir, start_time, end_time):
 
     string = str(output, 'UTF-8')
     assert 'Elapsed' in string
-    assert os.path.exists(tmp_dir)
-    shutil.rmtree(tmp_dir)
+    assert os.path.exists(tmpdir)
+    shutil.rmtree(tmpdir)
 
 
 def test_db_connection(start_time, end_time):

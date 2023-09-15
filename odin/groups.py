@@ -1,116 +1,9 @@
 import argparse
-import pytz
-from tzlocal import get_localzone
-import time
+import os
+from .types import iso_argument, delta_argument, directory_argument
+from odin.utils.time import TimeZone, get_iso_datetime
 from datetime import datetime, timedelta
 import sys as _sys
-
-
-# def DHMMSStringToTimedelta(string):
-#     """Converts a  DD:HH:MM:SS duration string to a timedelta object.
-#     :param (str) string              DD:HH:MM:SS-formatted string
-#     return (datetime.timedelta)      timedelta reprsentation of string
-#     """
-#     multiplier = 1
-#     if string.startswith('-'):
-#         multiplier = -1
-#
-#     # Get rid of + or -
-#     string = string.strip('-').strip('+')
-#
-#     my_times = string.split(':')
-#     if len(my_times)!=4:
-#         raise ValueError("{} not formatted in DD:HH:MM:SS format.")
-#
-#     my_times = list(map(int, my_times))
-#
-#     return timedelta(days=my_times[0], hours=my_times[1], minutes=my_times[2], seconds=my_times[3]) * multiplier
-
-
-# def delta_argument(time_delta_string):
-#     """A type argument for when a value can be a date or a time delta.
-#     Resolves whether the string is an ISO string or a DD:HH:MM:SS string.
-#
-#     :param time_delta_string (str)             ISO string or +/-DD:HH:MM:SS string
-#     :return delta (timedelta or datetime)      Either a timedelta or timedelta string.
-#     """
-#
-#     if time_delta_string is None:
-#         return None
-#
-#     try:
-#         return getDateTimeFromIso(time_delta_string)
-#     except ValueError:
-#         try:
-#             return DHMMSStringToTimedelta(time_delta_string)
-#         except ValueError:
-#             msg = "{} is not in ISO 8601 format or DD:HH:MM:SS format."
-#             raise argparse.ArgumentTypeError(msg)
-
-
-# def getDateTimeFromIso(iso):
-#     """Get a datetime.datetime object from ISO 8601 date/time string in UTC
-#
-#     :param (str) iso:               A ISO 8601 Formatted date/time string
-#     :return (datetime.datetime):
-#     """
-#
-#     pats = iter(['%Y%m%dT%H%M%S.%f%z', '%Y%m%dT%H%M%S%z', '%Y-%m-%dT%H:%M:%S.%f%z', '%Y-%m-%dT%H:%M:%S%z',
-#                  '%Y%m%d %H%M%S.%f%z', '%Y%m%d %H%M%S%z', '%Y-%m-%d %H:%M:%S.%f%z', '%Y-%m-%d %H:%M:%S%z'])
-#
-#     for pat in pats:
-#         try:
-#             return TimeZone.utc.normalize(datetime.datetime.strptime(iso, pat))
-#         except ValueError:
-#             pass
-#
-#     raise ValueError("{} is not in ISO format".format(iso))
-
-# def iso_argument(time_string):
-#     """Converts an ISO string to a UTC datetime.datetime object.
-#     :param time_string (str)                  ISO formatted string
-#     :return (datetime.datetime)               UTC datetime object
-#     """
-#     if time_string is None:
-#         return None
-#
-#     try:
-#         return TimeZone.utc.normalize(getDateTimeFromIso(time_string))
-#     except ValueError:
-#         msg = "{} is not formatted in ISO 8601 format."
-#         raise argparse.ArgumentTypeError(msg)
-
-
-class TimeZone:
-    """Helper Class to define useful timezones"""
-    utc = pytz.timezone("UTC")
-    eastern = pytz.timezone('US/Eastern')
-    central = pytz.timezone('US/Central')
-    mountain = pytz.timezone('US/Mountain')
-    pacific = pytz.timezone('US/Pacific')
-    hawaii = pytz.timezone('US/Hawaii')
-    alaska = pytz.timezone('US/Alaska')
-    local = get_localzone()
-
-
-def getIsoDateTime(dt, noSeparator=False):
-    """Returns an ISO 8601 date/time string in UTC for a localized datetime.datetime.
-
-
-    :param (datetime.datetime) dt:      A datetime object
-    :param (bool) noSeparator:          Specify whether or not to use "-" and ":" in string
-    :return (str):                      A String representing the time
-    """
-    if noSeparator is True:
-        if dt.tzinfo == pytz.utc:
-            return dt.strftime('%Y%m%dT%H%M%SZ')
-        else:
-            return dt.strftime('%Y%m%dT%H%M%S%z')
-    else:
-        if dt.tzinfo == pytz.utc:
-            return dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-        else:
-            return dt.strftime('%Y-%m-%dT%H:%M:%S%z')
 
 
 class ISOHelpAction(argparse.Action):
@@ -159,7 +52,7 @@ class ISOHelpAction(argparse.Action):
 
         Your clock's present ISO8601 time is {}
         
-        """.format(getIsoDateTime(datetime.now(TimeZone.local)))
+        """.format(get_iso_datetime(datetime.now(TimeZone.local)))
 
 
         formatter = parser._get_formatter()
@@ -168,103 +61,103 @@ class ISOHelpAction(argparse.Action):
         parser.exit()
 
 
-# class TimePeriod(argparse.Action):
-#     """A class to assemble a time period, conducting post-processing on namespace.end if needed. Only for setting
-#     namespace.stop (since that can come in as a timedelta.
-#
-#     Note: in order to properly reconcile variables, if you set one value with a datetime you have to set the other now.
-#     Otherwise the action doesn't know when to check to make sure start isn't later than stop. If you set a timedelta
-#     and leave the default value in place, that's fine - it doesn't need to check namespace.start <= namespace.stop
-#     in that case.
-#     """
-#
-#     def __init__(self, option_strings, *args, **kwargs):
-#         super(TimePeriod, self).__init__(option_strings=option_strings,
-#                                          *args, **kwargs)
-#
-#     def __call__(self, parser, namespace, value, option_strings=None):
-#         if (self.dest != 'stop') and (self.dest != 'start'):
-#             raise ValueError("This action is only for setting stop and start.")
-#
-#         # if it doesn't have a default, argument is required.
-#         for action in parser._actions:
-#             if (action.dest == 'start') or (action.dest == 'stop'):
-#                 if action.default is None:
-#                     action.required = True
-#
-#         if isinstance(value, datetime):
-#             # This start and stop now required - time defaults are only valid if they're both left alone, or you're only
-#             # setting a timedelta via stop. Otherwise you can't reconcile the times and make sure they're valid.
-#             for action in parser._actions:
-#                 if (action.dest == 'start') or (action.dest == 'stop'):
-#                     setattr(action, 'required', True)
-#
-#         # Set the fed value
-#         setattr(self, self.dest, value)
-#
-#         if self.dest == 'stop':
-#             if isinstance(value, timedelta):
-#                 st = None
-#                 # Try to get the set start tijme.
-#                 for action in parser._actions:
-#                     if action.dest == 'start':
-#                         if hasattr(action, 'start'):
-#                             st = getattr(action, 'start')
-#                 # Otherwise, use the default (already in the namespace. If it's valid (not none), use it to set values.
-#                 st = getattr(namespace, 'start')
-#                 if st is not None:
-#                     # If less than zero, stop is set in start, and start in stop.
-#                     if value.total_seconds() < 0:
-#                         setattr(namespace, 'start', st + value)
-#                         setattr(namespace, 'stop', st)
-#
-#                     # Else, just set it normally.
-#                     else:
-#                         setattr(namespace, 'stop', st + value)
-#                 else:
-#                     pass
-#
-#             else:
-#                 start_set = False
-#                 # check if start has been set.
-#                 for action in parser._actions:
-#                     if action.dest == 'start':
-#                         if hasattr(action, 'start'):
-#                             start_set = True
-#
-#                 setattr(namespace, self.dest, value)
-#
-#                 # If it has, make sure the times reconcile.
-#                 if start_set is True:
-#                     if namespace.start >= namespace.stop:
-#                         parser.error("Time start {} cannot be greater or equal to time stop {}.".format(namespace.start,
-#                                                                                                         namespace.stop))
-#
-#         # Now looking at the start case.
-#         else:
-#             stop_set = False
-#             stop_value = None
-#             for action in parser._actions:
-#                 if action.dest == 'stop':
-#                     if hasattr(action, 'stop'):
-#                         stop_set = True
-#                         stop_value = getattr(action, action.dest)
-#             # If stop was a timedelta, do some math.
-#             if isinstance(stop_value, timedelta):
-#                 set_stop_value = stop_value + value
-#                 # Switch start and stop if negative timedelta
-#                 if stop_value.total_seconds() < 0 :
-#                     setattr(namespace, 'start', set_stop_value)
-#                     setattr(namespace, 'stop', value)
-#                 else:
-#                     setattr(namespace, 'start', value)
-#                     setattr(namespace, 'stop', set_stop_value)
-#             else:
-#                 setattr(namespace, 'start', value)
-#                 if stop_set is True:
-#                     if namespace.start >= namespace.stop:
-#                         parser.error("Time start {} cannot be greater or equal to time stop {}.".format(namespace.start,
-#                                                                                                         namespace.stop))
+class TimePeriod(argparse.Action):
+    """A class to assemble a time period, conducting post-processing on namespace.end if needed. Only for setting
+    namespace.stop (since that can come in as a timedelta.
+
+    Note: in order to properly reconcile variables, if you set one value with a datetime you have to set the other now.
+    Otherwise the action doesn't know when to check to make sure start isn't later than stop. If you set a timedelta
+    and leave the default value in place, that's fine - it doesn't need to check namespace.start <= namespace.stop
+    in that case.
+    """
+
+    def __init__(self, option_strings, *args, **kwargs):
+        super(TimePeriod, self).__init__(option_strings=option_strings,
+                                         *args, **kwargs)
+
+    def __call__(self, parser, namespace, value, option_strings=None):
+        if (self.dest != 'stop') and (self.dest != 'start'):
+            raise ValueError("This action is only for setting stop and start.")
+
+        # if it doesn't have a default, argument is required.
+        for action in parser._actions:
+            if (action.dest == 'start') or (action.dest == 'stop'):
+                if action.default is None:
+                    action.required = True
+
+        if isinstance(value, datetime):
+            # This start and stop now required - time defaults are only valid if they're both left alone, or you're only
+            # setting a timedelta via stop. Otherwise you can't reconcile the times and make sure they're valid.
+            for action in parser._actions:
+                if (action.dest == 'start') or (action.dest == 'stop'):
+                    setattr(action, 'required', True)
+
+        # Set the fed value
+        setattr(self, self.dest, value)
+
+        if self.dest == 'stop':
+            if isinstance(value, timedelta):
+                st = None
+                # Try to get the set start tijme.
+                for action in parser._actions:
+                    if action.dest == 'start':
+                        if hasattr(action, 'start'):
+                            st = getattr(action, 'start')
+                # Otherwise, use the default (already in the namespace. If it's valid (not none), use it to set values.
+                st = getattr(namespace, 'start')
+                if st is not None:
+                    # If less than zero, stop is set in start, and start in stop.
+                    if value.total_seconds() < 0:
+                        setattr(namespace, 'start', st + value)
+                        setattr(namespace, 'stop', st)
+
+                    # Else, just set it normally.
+                    else:
+                        setattr(namespace, 'stop', st + value)
+                else:
+                    pass
+
+            else:
+                start_set = False
+                # check if start has been set.
+                for action in parser._actions:
+                    if action.dest == 'start':
+                        if hasattr(action, 'start'):
+                            start_set = True
+
+                setattr(namespace, self.dest, value)
+
+                # If it has, make sure the times reconcile.
+                if start_set is True:
+                    if namespace.start >= namespace.stop:
+                        parser.error("Time start {} cannot be greater or equal to time stop {}.".format(namespace.start,
+                                                                                                        namespace.stop))
+
+        # Now looking at the start case.
+        else:
+            stop_set = False
+            stop_value = None
+            for action in parser._actions:
+                if action.dest == 'stop':
+                    if hasattr(action, 'stop'):
+                        stop_set = True
+                        stop_value = getattr(action, action.dest)
+            # If stop was a timedelta, do some math.
+            if isinstance(stop_value, timedelta):
+                set_stop_value = stop_value + value
+                # Switch start and stop if negative timedelta
+                if stop_value.total_seconds() < 0 :
+                    setattr(namespace, 'start', set_stop_value)
+                    setattr(namespace, 'stop', value)
+                else:
+                    setattr(namespace, 'start', value)
+                    setattr(namespace, 'stop', set_stop_value)
+            else:
+                setattr(namespace, 'start', value)
+                if stop_set is True:
+                    if namespace.start >= namespace.stop:
+                        parser.error("Time start {} cannot be greater or equal to time stop {}.".format(namespace.start,
+                                                                                                        namespace.stop))
 
 
 class BaseParent(object):
@@ -303,12 +196,14 @@ class DateParent(BaseParent):
 
     def _add_arguments(self):
         self.group.add_argument('--start', '-a',
-                                # TODO: checkout the TimePeriod class and see what it does
-                                # action=TimePeriod,
+                                action=TimePeriod,
+                                type=iso_argument,
                                 help='The start time for the period of data being queried. '
                                      'Start time in ISO 8601 format.')
 
-        self.group.add_argument('--stop', '-b',
+        self.group.add_argument('--stop', '--delta', '-b',
+                                action=TimePeriod,
+                                type=delta_argument,
                                 help='The end time for the period of data being queried. '
                                      'The ISO 8601 end time DD:HH:MM:SS.SSSZ.')
         # self.group.add_argument('--last7', help='quick query for the last seven days of data.')
@@ -374,5 +269,5 @@ class ProjectParent(BaseParent):
 
     def _add_arguments(self):
 
-        self.group.add_argument('--project_dir', '-d')
+        self.group.add_argument('--project_dir', '-d', type=directory_argument, default=os.getcwd())
         self.group.add_argument('--sub_dirs', '-sd', nargs='*', default=None)

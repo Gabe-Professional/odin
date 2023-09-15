@@ -1,4 +1,3 @@
-from tests.fixture import ga_data_fp
 from odin.vis.google_analytics import GData
 import pandas as pd
 

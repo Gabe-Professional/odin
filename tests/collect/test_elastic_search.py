@@ -1,13 +1,8 @@
-import pandas as pd
-import pytest
 import os
 from odin.collect.elastic_search import get_query_from_path, Db, make_pretty_df, build_body_kw_query
-from tests.fixture import query_path, start_time, end_time, elasticsearch_query_path, tmp_dir
 import logging
 import shutil
 import subprocess
-from datetime import timedelta
-import warnings
 logger = logging.getLogger(__name__)
 """
 # Run test example:
@@ -16,18 +11,18 @@ pytest tests/module/file.py::test_function_name
 """
 
 
-def test_progress_bar(tmp_dir):
+def test_progress_bar(tmpdir):
     # todo: need to query less data
     cmd = 'odin collect '
-    cmd += f'--elastic -d {tmp_dir} -sd test1 test2 -a 2023-08-11T00:00:10.000Z -b 2023-08-11T00:05:00.000Z -c PROD -kw biden nato'
+    cmd += f'--elastic -d {tmpdir} -sd test1 test2 -a 2023-08-11T00:00:10.000Z -b 2023-08-11T00:05:00.000Z -c PROD -kw biden nato'
     output = subprocess.check_output(cmd, shell=True)
     for o in str(output, 'UTF-8').split('\n'):
         print(o)
 
     string = str(output, 'UTF-8')
     assert 'Elapsed' in string
-    assert os.path.exists(tmp_dir)
-    shutil.rmtree(tmp_dir)
+    assert os.path.exists(tmpdir)
+    shutil.rmtree(tmpdir)
 
 
 def test_get_query_from_path(elasticsearch_query_path):

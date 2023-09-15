@@ -3,7 +3,7 @@ import pandas as pd
 
 import odin.utils.munging as oum
 import odin.collect.elastic_search as ose
-from tests.fixture import query_path, start_time, end_time, name_labels, names_data_csv
+from tests.conftest import query_path, start_time, end_time, name_labels, names_data_csv
 
 
 strg = "[0.015952223911881447, 0.029908902943134308, -0.062116459012031555, -0.06531211733818054, " \

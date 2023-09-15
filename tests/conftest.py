@@ -34,7 +34,7 @@ def names_data_csv():
 
 @pytest.fixture
 def tmp_dir():
-    return '/tmp/test_setup'
+    return os.path.dirname('tmp/test_setup')
 
 
 @pytest.fixture
