@@ -2,9 +2,6 @@
 requires = ["setuptools>=64.0.0", "setuptools-git-versioning<2", "setuptools-scm>=7.1.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools-git-versioning]
-enabled = true
-
 [project]
 name = "odin"
 dynamic = ["version"]
