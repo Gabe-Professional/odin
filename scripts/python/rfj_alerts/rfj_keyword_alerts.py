@@ -14,34 +14,24 @@ from odin.collect.elastic_search import Db, build_body_kw_query, make_pretty_df
 from odin.utils.projects import setup_project_directory
 import scipy.stats as stats
 from scipy.spatial.distance import cdist
-
-
-
 # THIS SCRIPT SHOULD
 # 1. TAKE A LIST OF DESIRED KEYWORDS AS AN INPUT
 # 2. QUERY ELASTIC SEARCH FOR A 30 DAY PERIOD
 # 3. ASSESS THE FREQUENCIES OF THE USER INPUT KEYWORDS
 # 4. DEFINE THE CONFIDENCE INTERVAL FOR EACH KEYWORD
 # 5. LOG THE INTERVALS FOR EACH KEYWORD
-
 # THE SCRIPT SHOULD BE ABLE TO BE RUN ON A DAILY FREQUENCY FOR A SET OF KEYWORDS AND UPDATE THE CONFIDENCE INTERVAL
 # FOR A ROLLING 30 DAY INTERVAL
 #
 # RUNNING THIS PROGRAM DOES HAS SOME LIMITS. ELASTICSEARCH API SEEMS TO LIMIT RESULTS TO 10K.
 # WE COULD GET AROUND THIS BY QUERYING A SMALLER TIME FRAME REPEATEDLY. USING POPULAR KEYWORD SUCH AS BIDEN,
 # YIELDS LOTS OF RESULTS.
-
-
 # START WITH 30 DAYS OF DATA FOR EACH KEYWORD.
 # QUERY EACH DAY AND UPDATE THE COUNTS DATA SET WITH THE CURRENT DAYS COUNT
 # RE-EVALUATE THE LIMITS OF EACH KEYWORD. USE SAMPLE OF 30 DAYS FOR EACH KEYWORD...
-
-
 # todo: make some variables to ingest with args from CLI...may need to move scripts to 'odin' level...
 # todo: need an easy way to add new keywords and their labels.
 # todo: need an easy way to add custom keywords list...not priority, this would be for other pulse users/analysts...
-
-# todo: make this part of the CLI... odin alerting [ARGS...]
 
 
 def conf_intervals_from_category(df: pd.DataFrame, value, log=True):
@@ -62,9 +52,9 @@ def conf_intervals_from_category(df: pd.DataFrame, value, log=True):
     return conf
 
 
-def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dict):
+def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dict, twitter=False):
     counts_pkl = os.path.join(project_dirs['data'], 'model', 'daily_counts.pkl')
-
+    delta = -100
     end = pd.to_datetime(str(datetime.datetime.now().date())) + timedelta(seconds=-1)
     et = end.isoformat() + str('.999Z')
     get_data = False
@@ -82,7 +72,7 @@ def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dic
     else:
         df = pd.DataFrame()
         get_data = True
-        st = end + timedelta(days=-100)
+        st = end + timedelta(days=delta)
         et = (end + timedelta(seconds=-1)).isoformat() + str('.999Z')
 
     if get_data:
@@ -99,15 +89,14 @@ def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dic
 
             tmp = make_labeled_df(tmp, labels_dict=labels_dict)
 
+            # REMOVE THE TWITTER DOCS EASILY.
+            # TODO: do this a the database query
+            if not twitter:
+                tmp = tmp[tmp['domain'] != 'twitter.com']
+            print(f'results in df: {len(tmp)}')
             pd.set_option('display.max_columns', None)
             tmp['date'] = pd.to_datetime(tmp['timestamp'], format='mixed').dt.date
 
-            # counts = tmp.groupby(by=['date',
-            #                          'keyword_label']).uid.count().reset_index().rename(
-            #     columns={'uid': 'count'}).sort_values('date')
-
-            # todo: sum the vector here...no reason to have to do it later...
-            # todo: also can get the body length here...
             counts = tmp.groupby(by=[
                 'date',
                 'keyword_label']).agg({'uid': 'count',
@@ -296,7 +285,12 @@ def main():
             docs = [body[idx] for idx in args]
             urls = [url[idx] for idx in args]
             data['cluster_center_docs'].append(', '.join(docs))
-            data['urls'].append(', '.join(urls))
+
+            # todo: something wired happening here if a url is 'NoneType'...not breaking, but need to fix
+            if None not in data['urls']:
+                data['urls'].append(', '.join(urls))
+            else:
+                data['urls'].append('')
             log_df = pd.DataFrame(data)
 
             if len(log_df.loc[log_df['alert?'] == 1]) > 0:

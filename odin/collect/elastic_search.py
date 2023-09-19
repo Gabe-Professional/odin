@@ -187,17 +187,26 @@ class Db(object):
                     logger.info(f'Setting default batch size to {batch_size}...')
 
                 results = self._conn.search(index=index_pattern, query=query['query'], size=batch_size, sort='system_timestamp')
+                tmp = results['hits']['hits'][0]
+
                 data = results['hits']['hits'][:]
                 _sys_time = results['hits']['hits'][batch_size - 1]['_source']['system_timestamp']
 
                 logging.info('Batching data from Elasticsearch...')
+                # todo: something is still kind of weird here...does not get the last batch sometimes...
+                #  just adding the first value again to get around...not a huge deal for now.
                 while count > len(data):
                     results = self._conn.search(index=index_pattern, query=query['query'],
                                                 size=batch_size, sort='system_timestamp', search_after=[_sys_time])
                     current_batch = len(results['hits']['hits'][:])
-                    _sys_time = results['hits']['hits'][current_batch - 1]['_source']['system_timestamp']
-                    data += results['hits']['hits'][:]
+                    try:
+                        _sys_time = results['hits']['hits'][current_batch - 1]['_source']['system_timestamp']
+                        data += results['hits']['hits'][:]
+                    except:
+                        # _sys_time = results['hits']['hits'][0]['_source']['system_timestamp']
+                        data += tmp
 
+        logger.info(f'Elasticsearch returned {len(data)} results')
         return data
 
     def count(self, query, index_pattern):

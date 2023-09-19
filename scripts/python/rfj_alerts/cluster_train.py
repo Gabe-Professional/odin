@@ -23,53 +23,45 @@ AT_CRED_PATH = os.path.expanduser('~/.cred/rfj_alerting_at.json')
 with open(AT_CRED_PATH, 'r') as f:
     cred_data = json.load(f)
 
-BASE_ID = cred_data['base_id']
-TABLE_NAME = cred_data['table_name']
-API_KEY = cred_data['api_key']
-END = f'https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}'
-HEADERS = {'Authorization': f'Bearer {API_KEY}',
-           'Content-Type': 'application/json'}
-
 ### DIRECTORY VARIABLES
-LABEL_DIR = 'reward_offer_names'
-MAIN_DIR = os.path.expanduser('~/data/odin')
-DATA_DIR = os.path.join(MAIN_DIR, f'rfj_alerting/{LABEL_DIR}/data')
-LABELS_DICT = {}
-COLUMN_TITLE = 'name_label'
+# LABEL_DIR = 'reward_offer_names'
+# MAIN_DIR = os.path.expanduser('~/data/odin')
+# DATA_DIR = os.path.join(MAIN_DIR, f'rfj_alerting/{LABEL_DIR}/data')
+# COLUMN_TITLE = 'name_label'
 
 ### SCRIPT VARIABLES
-res = req.get(url=END, headers=HEADERS)
-SUCCESS_DATES = [rec['fields']['query_date'] for rec in res.json()['records']]
-ENTRIES = [(rec['fields']['name_label'], rec['fields']['query_date']) for rec in res.json()['records']]
 
-SAMPLE_SIZE = 1000
+SAMPLE_FRAC = .5
+
+PROJECT_DIRECTORY = '~/projects/odin/rfj_alerting_app'
+
+KEYWORDS = REWARD_OFFER_NAMES
+LABELS_DF = pd.read_csv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
+                                     'odin', 'data', 'name_labels.csv'))
+
+LABELS_DICT = {LABELS_DF.iloc[idx, :]['name']: LABELS_DF.iloc[idx, :]['label'] for idx in range(len(LABELS_DF))}
+
+DIRS = setup_project_directory(PROJECT_DIRECTORY)
+TRAIN_DATA_PKL = os.path.join(DIRS['data'], 'cluster_train', 'train_data.pkl')
+CLUSTER_PKL_FP = os.path.join(DIRS['data'], 'cluster_train', 'kmeans_model.pkl')
 
 
 def run():
 
-    # DEFINE VARIABLES
-    PROJECT_DIRECTORY = '~/projects/odin/rfj_alerting_app'
-
-    KEYWORDS = REWARD_OFFER_NAMES
-    LABELS_DF = pd.read_csv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))),
-                                         'odin', 'data', 'name_labels.csv'))
-
-    LABELS_DICT = {LABELS_DF.iloc[idx, :]['name']: LABELS_DF.iloc[idx, :]['label'] for idx in range(len(LABELS_DF))}
-
-    DIRS = setup_project_directory(PROJECT_DIRECTORY)
-    TRAIN_DATA_PKL = os.path.join(DIRS['data'], 'cluster_train', 'train_data.pkl')
-    CLUSTER_PKL_FP = os.path.join(DIRS['data'], 'cluster_train', 'kmeans_model.pkl')
-
+    # GET THE ALERT DATA
     counts_df = pd.read_pickle(os.path.join(DIRS['data'], 'model','daily_counts.pkl'))
-    alert_dates = counts_df.loc[counts_df['alert?'] == 1]['date'].unique().tolist()
+    alert_dates = [str(d) for d in counts_df.loc[counts_df['alert?'] == 1]['date'].unique().tolist()]
+
     alert_kwds = counts_df.loc[counts_df['alert?'] == 1]['keyword_label'].unique().tolist()
 
     if not os.path.exists(TRAIN_DATA_PKL):
         # GET THE TRAINING DATA
         st = str(counts_df['date'].tolist()[0]) + 'T00:00:00.000Z'
         et = str(counts_df['date'].tolist()[-1]) + 'T00:00:00.000Z'
-        fp = os.path.join(DIRS['data'], f'{st}_{et}_elastic_search.csv')
+        fp = os.path.join(DIRS['data'], 'cluster_train', f'{st}_{et}_elastic_search.csv')
         if not os.path.exists(fp):
+
+            # QUERY ES FOR THE DATES IN THE ALERT DATA
             query = build_body_kw_query(KEYWORDS, start_time=st, end_time=et)
             with Db.Create('PROD') as es:
                 count = es.count(query=query, index_pattern='pulse')
@@ -85,16 +77,17 @@ def run():
         results_df = results_df.loc[results_df['domain'] != 'twitter.com'].drop_duplicates(subset='uid')
         results_df['ln_body_length'] = np.log(results_df.loc[:, 'body'].apply(lambda x: len(x)))
         results_df = make_labeled_df(results_df, labels_dict=LABELS_DICT)
-        results_df['date'] = pd.to_datetime(results_df['timestamp']).dt.date.apply(lambda x: str(x))
+        results_df['date'] = pd.to_datetime(results_df['timestamp'], format='mixed').dt.date.apply(lambda x: str(x))
+
         results_df.loc[:, 'encoding'] = results_df['encoding'].apply(lambda x: parse_vector_string(x))
         results_df = results_df.loc[results_df['encoding'].notna()]
 
-        print(results_df.columns)
         sample_df = results_df.loc[(results_df['date'].isin(alert_dates)) &
-                                   (results_df['keyword_label'].isin(alert_kwds))].sample(n=SAMPLE_SIZE,
+                                   (results_df['keyword_label'].isin(alert_kwds))].sample(frac=SAMPLE_FRAC,
                                                                                           random_state=0)\
             .reset_index(drop=True)
-        sample_df.to_csv(os.path.join(DIRS['data'], 'training_sample.csv'), index=False)
+
+        sample_df.to_csv(os.path.join(DIRS['data'],  'cluster_train', 'training_sample.csv'), index=False)
 
         #### DEFINE THE FEATURES FOR CLUSTERING
         X = np.array(sample_df.loc[:, 'encoding'].tolist())
@@ -186,6 +179,7 @@ def run():
 
         c_docs = sample_df.iloc[args]
         print(c_docs.body.tolist())
+        print('TRAINING COMPLETE')
 
 if __name__ == '__main__':
     run()
