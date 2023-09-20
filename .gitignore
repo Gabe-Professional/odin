@@ -9,5 +9,4 @@ odin/__pycache__/cli.cpython-39.pyc
 odin/collect/build
 odin/collect/dist
 odin/collect/airtable_records.spec
-venv
-_version.py
+dist/
