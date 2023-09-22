@@ -49,18 +49,19 @@ def test_get_messages_by_datetime(start_time, end_time):
 
 
 def test_get_messages_from_contact_id():
-    contact_id = '32127'
+    contact_id = ['35', '443']
+
     pretty = True
     if pretty:
         with Db.Create('DEV') as db:
-            df = db.get_messages_from_contact_id(contact_id=contact_id, pretty=pretty)
+            df = db.get_messages_from_contact_id(*contact_id, pretty=pretty)
         assert type(df) == pd.DataFrame
         assert len(df) != 0
 
     pretty = False
     if not pretty:
         with Db.Create('DEV') as db:
-            data = db.get_messages_from_contact_id(contact_id=contact_id, pretty=pretty)
+            data = db.get_messages_from_contact_id(*contact_id, pretty=pretty)
         assert type(data) == list
         assert len(data) != 0
 

@@ -258,6 +258,7 @@ class QueryParent(BaseParent):
         elif self.subtype in ['postgres']:
             self.group.add_argument('--message_in', '-i', action='store_true')
             self.group.add_argument('--message_out', '-o', action='store_true')
+            self.group.add_argument('--contact_id', '--CID', dest='contact', nargs='+')
 
 
 class ProjectParent(BaseParent):

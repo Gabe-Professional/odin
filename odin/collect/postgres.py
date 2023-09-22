@@ -143,13 +143,13 @@ class Db(object):
         return val
 
     @progress_bar
-    def get_messages_from_contact_id(self, contact_id, pretty=True):
+    def get_messages_from_contact_id(self, *contact_id, pretty=True):
         table = "messages"
         # data = []
         fields = ["contact_id", "message", "timestamp"]
-        sql = f'select {",".join(fields)} from public.{table} where "contact_id" in %s'
+        sql = f'select {",".join(fields)} from public.{table} where contact_id in %s'
         cursor = self._get_cursor()
-        cursor.execute(sql, (tuple([contact_id]),))
+        cursor.execute(sql, (tuple(contact_id),))
         data = cursor.fetchall()
         if pretty:
             data = pd.DataFrame(data=data, columns=fields)
@@ -160,9 +160,9 @@ class Db(object):
     @progress_bar
     def get_contacts_by_datetime(self, start_datetime, end_datetime, pretty=True):
         table = "contacts"
-        fields = ["contact_id", "contact_urn", "created_time"]
+        fields = ["contact_id", "contact_urn", "created_datetime"]
         sql = f'select {",".join(fields)} from public."{table}" ' \
-              f'where "created_time" BETWEEN %s and %s'
+              f'where "created_datetime" BETWEEN %s and %s'
         cursor = self._get_cursor()
         cursor.execute(sql, (tuple([start_datetime], ), tuple([end_datetime], ),))
         data = cursor.fetchall()
