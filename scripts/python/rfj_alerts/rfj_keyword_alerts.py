@@ -88,12 +88,11 @@ def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dic
                 tmp = make_pretty_df(data)
 
             tmp = make_labeled_df(tmp, labels_dict=labels_dict)
-
             # REMOVE THE TWITTER DOCS EASILY.
             # TODO: do this a the database query
             if not twitter:
                 tmp = tmp[tmp['domain'] != 'twitter.com']
-            print(f'results in df: {len(tmp)}')
+            tmp['keyword_label'] = tmp['keyword_label'].astype(str)
             pd.set_option('display.max_columns', None)
             tmp['date'] = pd.to_datetime(tmp['timestamp'], format='mixed').dt.date
 
@@ -103,7 +102,6 @@ def log_daily_counts(project_dirs: dict, fname, keywords: list, labels_dict: dic
                                        'encoding': lambda x: [sum(a) if a is not None else 0 for a in x],
                                        'body': lambda x: list(x),
                                        'url': lambda x: list(x)}).reset_index().rename(columns={'uid': 'count'})
-
             df = pd.DataFrame(pd.concat([df, counts]).reset_index(drop=True))
             df.to_pickle(counts_pkl)
 
