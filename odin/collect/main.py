@@ -18,9 +18,12 @@ def collect_main(args):
     end_time = args.stop
     subdirs = args.sub_dirs
     keywords = args.keywords
+    contacts = args.contact
+
     directories = setup_project_directory(directory=args.project_dir, subdirs=subdirs)
 
     data = {}
+    # todo: need to sort this out a little better...works decent for now...need to address no dates with message direction...
     if args.postgres:
         direction = None
 
@@ -29,16 +32,31 @@ def collect_main(args):
             logger.debug(f'Downloading data directly on the odin cli is not an option at this time. '
                          f'Please run your command again without the -dl option')
         else:
-            if args.message_in:
-                direction = 'in'
 
-            elif args.message_out:
-                direction = 'out'
+            if (args.message_in or args.message_out) and contacts is None:
 
-            with PG.Create(cluster) as db:
+                if args.message_in:
+                    direction = 'in'
+                elif args.message_out:
+                    direction = 'out'
+                with PG.Create(cluster) as db:
 
-                data = db.get_messages_by_datetime(start_datetime=start_time, end_datetime=end_time,
-                                                   direction=direction, pretty=True)
+                    data = db.get_messages_by_datetime(start_datetime=start_time, end_datetime=end_time,
+                                                       direction=direction, pretty=True)
+
+            elif args.contact and (args.message_in or args.message_out):
+                logger.info(f'Unable to query by both contact ID and message direction at this time. '
+                            f'Continuing with contact IDs')
+
+                with PG.Create('DEV') as db:
+                    data = db.get_messages_from_contact_id(*contacts)
+
+            elif args.contact and not (args.message_in or args.message_out):
+                logger.info(f'Getting messages involving {", ".join(contacts)}')
+                with PG.Create('DEV') as db:
+                    data = db.get_messages_from_contact_id(*contacts)
+
+            logger.info(f'Results: \n {data}')
 
     elif args.elastic:
         if not keywords:

@@ -33,10 +33,10 @@ def names_data_csv():
 
 
 @pytest.fixture
-def tmp_dir():
-    return os.path.dirname('tmp/test_setup')
+def ga_data_fp():
+    return os.path.join(os.path.dirname(__file__), 'data', 'download_activity.csv')
 
 
 @pytest.fixture
-def ga_data_fp():
-    return os.path.join(os.path.dirname(__file__), 'data', 'download_activity.csv')
+def contact_id_ist():
+    return ['35', '443']

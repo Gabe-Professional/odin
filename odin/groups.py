@@ -6,6 +6,21 @@ from datetime import datetime, timedelta
 import sys as _sys
 
 
+class SortContacts(argparse.Action):
+
+    def __call__(self, parser, namespace, value, option_strings=None):
+        """Given a list of values, sorts them into uuid and non-uuid destinations."""
+
+        contacts = []
+        if value is None:
+            setattr(namespace, self.dest, None)
+
+        else:
+            for v in value:
+                contacts.append(v)
+            setattr(namespace, self.dest, sorted(contacts))
+
+
 class ISOHelpAction(argparse.Action):
     """This is a custom argparse action that prints a help message on iso time."""
 
@@ -258,7 +273,7 @@ class QueryParent(BaseParent):
         elif self.subtype in ['postgres']:
             self.group.add_argument('--message_in', '-i', action='store_true')
             self.group.add_argument('--message_out', '-o', action='store_true')
-            self.group.add_argument('--contact_id', '--CID', dest='contact', nargs='+')
+            self.group.add_argument('--contact_id', '--CID', dest='contact', nargs='+', action=SortContacts)
 
 
 class ProjectParent(BaseParent):

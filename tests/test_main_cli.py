@@ -1,7 +1,6 @@
 import os
 import subprocess
 import shutil
-# from tests.fixture import start_time, end_time
 import logging
 logger = logging.getLogger(__name__)
 

@@ -10,3 +10,4 @@ odin/collect/build
 odin/collect/dist
 odin/collect/airtable_records.spec
 dist/
+*/*/*/__pycache__
