@@ -1,6 +1,7 @@
 import pytest
 import os
-
+import logging
+from datetime import datetime
 
 @pytest.fixture
 def query_path():
@@ -40,3 +41,49 @@ def ga_data_fp():
 @pytest.fixture
 def contact_id_ist():
     return ['35', '443']
+
+@pytest.fixture
+def domain_kw_fp():
+    return os.path.join(os.path.dirname(__file__), 'data', 'domain_kw.txt')
+
+
+@pytest.fixture
+def pg_log_fp():
+    return os.path.join(os.path.dirname(__file__), 'collect', 'pg_tests.log')
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "custom_logging: Tests using custom logging")
+
+@pytest.fixture(scope='session', autouse=True)
+def setup_logging(request):
+    if request.config.getoption("-m") and "custom_logging" not in request.config.getoption("-m"):
+        return  # Skip logging setup if the marker is not present
+
+    log_file = 'test_results.log'
+
+    # Create a formatter with the desired format
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+    # Create a file handler and set the formatter
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+
+    # Get the root logger and add the file handler
+    root_logger = logging.getLogger()
+    root_logger.addHandler(file_handler)
+
+    # Log start time
+    start_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    logging.info(f'Tests started at: {start_time}')
+
+    def teardown():
+        # Log end time and duration
+        end_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        logging.info(f'Tests ended at: {end_time}')
+
+        # Calculate and log the duration
+        duration = (datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S') - datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')).total_seconds()
+        logging.info(f'Duration: {duration} seconds')
+
+    request.addfinalizer(teardown)

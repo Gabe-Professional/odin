@@ -100,60 +100,100 @@ class Db(object):
         return self._conn.cursor()
 
     ### QUERY FUNCTIONS ###
-    @progress_bar
-    def get_messages_by_datetime(self, start_datetime, end_datetime, direction='in', pretty=True):
-        """Helper function for getting messages from the english engagement messages table"""
-        logger.info(f'Getting messages from Postgres between: {start_datetime} - {end_datetime}')
-        table = "messages"
-        sql = f'select "message_id", "message", "timestamp", "engage_org" from public."{table}" ' \
-              f'where "direction" in %s and "timestamp" BETWEEN %s and %s'
-        cursor = self._get_cursor()
-        cursor.execute(sql, (tuple([direction]), tuple([start_datetime], ), tuple([end_datetime], ),))
+    def get_column_names(self, table_name: str):
+        tables = ['adjectives', 'annotations', 'attachment_release_requests', 'attachments', 'audit', 'codenames'
+                  'contact_core_annotations', 'contacts', 'dropdown_options', 'locked_rows', 'messages']
+        if table_name not in tables:
+            raise ValueError(f'Please input a valid table name from: {", ".join(tables)}')
+        else:
+            cursor = self._get_cursor()
+            sql = f"select column_name from information_schema.columns where table_name = '{table_name}';"
+            cursor.execute(sql)
 
-        data = {'message_id': [],
-                'message': [],
-                'datetime': [],
-                'language': []
-                }
+            column_names = [result[0] for result in cursor.fetchall()]
+            cursor.close()
 
-        for res in cursor:
-            data['message_id'].append(res[0])
-            data['message'].append(res[1])
-            data['datetime'].append(res[2])
-            data['language'].append(res[3])
+        return column_names
 
-        if pretty:
-            data = pd.DataFrame(data)
-            logger.info(f'\nPretty Data: \n {data.head(n=10)}')
-        elif not pretty:
-            data = data
-            logger.info(f'\nNot Pretty Data: \n{data}')
 
-        cursor.close()
-        return data
 
     @progress_bar
     def query(self, query_statement, query_parameters):
 
         # todo: make a unit test for this...
         cursor = self._get_cursor()
-        cursor.execute(query_statement, query_parameters)
+        cursor.execute(query_statement, (tuple(query_parameters),))
         val = cursor.fetchall()
         cursor.close()
         return val
 
     @progress_bar
-    def get_messages_from_contact_id(self, *contact_id, pretty=True):
-        table = "messages"
-        # data = []
-        fields = ["contact_id", "message", "timestamp"]
-        sql = f'select {",".join(fields)} from public.{table} where contact_id in %s'
+    def get_random_messages_in(self, fields=None, size=100):
+        # todo: maybe can expand this function to other tables as well...
+        default_fields = ['message_id', 'timestamp', 'contact_id', 'message', 'direction', 'machine_translation']
+        table = 'messages'
+        if fields is None:
+            fields = default_fields
+        elif not isinstance(fields, list):
+            raise ValueError('Argument fields must be a list')
+        field_str = ', '.join(fields)
+        direction = 'in'
+        sql = f'select setseed(1); ' \
+              f'select {field_str} from public.{table} ' \
+              f'where direction in %s ' \
+              f'order by random() limit %s;'
+
         cursor = self._get_cursor()
-        cursor.execute(sql, (tuple(contact_id),))
+        cursor.execute(sql, (tuple([direction]), tuple([size])))
+
+        df = pd.DataFrame(data=cursor.fetchall(), columns=fields)
+        return df
+
+    @progress_bar
+    def get_messages_by_datetime(self, start_datetime, end_datetime, direction='in', fields=None, pretty=True):
+        """Helper function for getting messages from the english engagement messages table"""
+        logger.info(f'Getting messages from Postgres between: {start_datetime} - {end_datetime}')
+        table = "messages"
+        default_fields = ['message_id', 'timestamp', 'contact_id', 'message', 'direction', 'machine_translation']
+        if fields is None:
+            fields = default_fields
+        elif not isinstance(fields, list):
+            raise ValueError('Argument fields must be a list')
+        field_str = ', '.join(fields)
+        sql = f'select {field_str} ' \
+              f'from public."{table}" ' \
+              f'where "direction" in %s and "timestamp" BETWEEN %s and %s'
+        cursor = self._get_cursor()
+        cursor.execute(sql, (tuple([direction]), tuple([start_datetime], ), tuple([end_datetime], ),))
+        # todo: add field inputs from user, if none provide default list
         data = cursor.fetchall()
         if pretty:
             data = pd.DataFrame(data=data, columns=fields)
+            logger.info(f'\nPretty Data: \n {data.head(n=10)}')
+        elif not pretty:
+            data = data
+            logger.info(f'\nNot Pretty Data: \n {data}')
 
+        cursor.close()
+        return data
+
+    @progress_bar
+    def get_messages_from_contact_id(self, *contact_id, pretty=True, direction=None):
+        table = "messages"
+        fields = ["message_id", "contact_id", "message", "machine_translation", "timestamp", "direction"]
+
+        if direction is None:
+            sql = f'select {",".join(fields)} from public.{table} where contact_id in %s'
+            cursor = self._get_cursor()
+            cursor.execute(sql, (tuple(contact_id),))
+        else:
+            sql = f'select {",".join(fields)} from public.{table} where contact_id in %s and direction=%s'
+            cursor = self._get_cursor()
+            cursor.execute(sql, (tuple(contact_id), tuple([direction])), )
+
+        data = cursor.fetchall()
+        if pretty:
+            data = pd.DataFrame(data=data, columns=fields)
         cursor.close()
         return data
 
@@ -170,4 +210,18 @@ class Db(object):
         if pretty:
             data = pd.DataFrame(data=data, columns=fields)
 
+        return data
+
+    def get_contact_rating(self, *contact_id):
+
+        table = 'annotations'
+        value = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+        sql = f'select contact_id, annotation_name, annotation_value from public.{table} ' \
+              f'where annotation_value in %s AND contact_id in %s'
+        cursor = self._get_cursor()
+        cursor.execute(sql, (tuple(value, ), tuple(contact_id, ),))
+        data = cursor.fetchall()
+        data = {str(t[0]): str(t[2]) for t in data}
+
+        cursor.close()
         return data

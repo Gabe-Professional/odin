@@ -1,16 +1,20 @@
+import collections
 import json
 import logging
 import os
 import nltk
 import numpy as np
 import pandas as pd
-from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+from nltk.stem import SnowballStemmer
+from multiprocessing import Pool
+from functools import partial
 import scipy.linalg as la
 import re
-from odin.collect.elastic_search import Db, build_body_kw_query, make_pretty_df
-from datetime import timedelta
-import datetime
+from nltk.corpus import stopwords, words
+nltk.download("words", quiet=True)
+nltk.download("stopwords", quiet=True)
+
 logger = logging.getLogger(__name__)
 
 
@@ -83,18 +87,26 @@ REWARD_OFFER_NAMES_DICT = {name: name for name in REWARD_OFFER_NAMES}
 ORGANIZATION_NAMES_DICT = {re.sub(pattern="[^A-Za-z0-9 ]+", repl='', string=org): org for org in ORGANIZATION_NAMES}
 
 
-def parse_vector_string(vector_string):
+def parse_vector_string(vector_string, value_type: str):
+    if not value_type:
+        raise ValueError('Please provide a value type for the elements in your string')
 
-    if type(vector_string) == str:
-        try:
-            vl = vector_string.replace('[', '').replace(']', '').replace(',', '').split()
-            vl = list(float(i) for i in vl)
-        except:
-            vl = None
-    elif type(vector_string) == list:
-        vl = vector_string
     else:
-        vl = None
+        if type(vector_string) == str:
+            try:
+                vl = vector_string.replace('[', '').replace(']', '').replace(',', '').split()
+                if value_type == 'float':
+                    vl = list(float(i) for i in vl)
+                elif value_type == 'str':
+                    vl = list(str(i).replace("'", '') for i in vl)
+                else:
+                    raise ValueError('float and str are the only supported value types at this time')
+            except:
+                vl = None
+        elif type(vector_string) == list:
+            vl = vector_string
+        else:
+            vl = None
     return vl
 
 
@@ -212,3 +224,115 @@ def make_labeled_df(df: pd.DataFrame, labels_dict):
     df = df.drop_duplicates(subset=['uid', 'keyword_label']).reset_index(drop=True)
     return df
 
+
+# Helpers for messages
+def is_useful(rating):
+    if rating in ['A', 'B', 'C']:
+        return 1
+    elif rating in ['D', 'E', 'F', 'G']:
+        return 0
+    else:
+        return None
+
+
+def make_word_freq_df(corpus, dictionary):
+    # todo: build a test for this...
+    wrd_freq_lst = []
+    for doc in corpus:
+        word_freq = {dictionary[word_id]: word_count for word_id, word_count in doc}
+        wrd_freq_lst.append(word_freq)
+    df = pd.DataFrame(wrd_freq_lst).fillna(0).astype(int)
+    return df
+
+
+def is_valid_word(word, valid_words):
+    return word.lower() in valid_words
+
+
+def preprocess_text(text, custom_stem=None, custom_stopwords=None, domain_words=None, token=('lem', 'stem')):
+    valid_words = set(words.words())
+    stop_words = set(stopwords.words("english"))
+
+    if custom_stopwords:
+        custom_stopwords = [word.lower() for word in custom_stopwords]
+        custom_stopwords = set(custom_stopwords)
+        logger.info('removing custom stopwords')
+        stop_words = stop_words.union(custom_stopwords)
+
+    if len(token) != 1:
+        logging.warning(f'Select a token option from {token}')
+        raise ValueError()
+
+    # Add custom stopwords to stopwords list to remove
+    else:
+        if domain_words is not None:
+            valid_words = valid_words.union(set(domain_words))
+
+        # Remove websites
+        text = re.sub(r'http[s]?://\S+|www\.\S+', '', text)
+        # Replace non words with whitespace
+        text = re.sub(r'\W', ' ', str(text))
+        # Replace multiple whitespaces with single whitespace
+        text = re.sub(r'\s+', ' ', str(text))
+        # Remove non english characters
+        text = re.sub(r'[^\x00-\x7F]+', '', text)
+        # Remove non letter characters
+        text = re.sub(r'[^a-zA-Z\s]', '', text)
+        # Remove numbers
+        text = re.sub(r'\d+', '', text)
+        # Remove short words (less than 3 characters)
+        text = re.sub(r'\b\w{1,2}\b', '', text)
+        text = text.lower()
+        text = text.split()
+        token_opts = ('lem', 'stem')
+        if all(opt in token_opts for opt in token):
+            for opt in token:
+                if opt == 'lem':
+                    lemmatizer = WordNetLemmatizer()
+                    text = [lemmatizer.lemmatize(word) for word in text]
+                elif opt == 'stem':
+                    stemmer = SnowballStemmer("english")
+                    text = [stemmer.stem(word) for word in text]
+                    if custom_stem is None:
+                        custom_stem = {}
+                    elif custom_stem is not None:
+                        if type(custom_stem) != dict:
+                            logging.warning('Please provide a stem mapping in the form of a dictionary')
+                        elif len(custom_stem.keys()) > 0:
+                            text = [custom_stem.get(word, stemmer.stem(word)) for word in text]
+                        else:
+                            logging.warning('The custom dictionary does not have any values')
+        text = [word for word in text if word not in stop_words and word in valid_words]
+
+    return text
+
+
+# def preprocess_text(text):
+#     return text
+
+
+def get_domain_words(filepath: os.path):
+
+    kwrds = list()
+    with open(filepath, 'r') as f:
+        for line in f:
+            word = line.strip().lower()
+            try:
+                wrds = re.split(r'[-/]', word)
+                for w in wrds:
+                    kwrds.append(w)
+            except:
+                kwrds.append(word)
+
+    return kwrds
+
+
+def make_topic_str(lda_topics: list):
+    lda_str = ''
+    for topic, features in enumerate(lda_topics):
+        topic = str(topic + 1)
+        feature_words = sorted(re.findall(r'"(.*?)"', str(features)))
+        lda_str += f'Topic {topic}: {", ".join(feature_words)} \n'
+
+    logger.info('Model Results: \n', lda_str)
+    return lda_str

@@ -43,11 +43,59 @@ def test_label_text_from_dict(name_labels, names_data_csv):
 
 
 def test_parse_vector_string(names_data_csv):
-
+    string = "['strength', 'war', 'state', 'speed', 'effort', 'follow', 'give', 'inform', 'report', 'get', " \
+             "'follow', 'effort', 'strength', 'war', 'state', 'give', 'meet', 'inform', 'report', 'thing', " \
+             "'true', 'correct', 'certain', 'act', 'strength', 'war', 'state', 'speed', 'last', 'effort']"
     # todo: generalize this test and function better.
     df = pd.read_csv(names_data_csv)
-    vl = oum.parse_vector_string(df.loc[0, 'labse_encoding'])
+    vl = oum.parse_vector_string(df.loc[0, 'labse_encoding'], value_type='float')
 
-    assert type(vl) == list
-    assert type(vl[0]) == float
+    assert isinstance(vl, list)
+    assert isinstance(vl[0], float)
+    vl = oum.parse_vector_string(string, value_type='str')
+    assert isinstance(vl, list)
+    assert isinstance(vl[0], str)
 
+
+def test_preprocess_text():
+    text = 'This is a message that contains some stop words and custom WORDS to Remove from TEXT messages the text ' \
+           'should be in a list format when do so it can be processed by LDA helpers. This text processor should also ' \
+           'remove a set of custom stopwords provided. It should remove the words Video, Photo, and Custom. This ' \
+           'should also lemmatize words. For example words should map to word and cats should map to cat. Jogging ' \
+           'should also map or maps to jog. The custom stem list should map syrian to syria...well see...'
+    custom_words = ['video', 'photo', 'custom']
+    lems_stems = ['cats', 'words', 'jogging']
+    custom_stem = {'syrian': 'syria'}
+    domain_words = ['syria']
+    # Test the stemming feature
+    new_text = oum.preprocess_text(text, custom_stem=custom_stem, domain_words=domain_words, custom_stopwords=custom_words, token=('stem',))
+    list_text = text.split(' ')
+    # Assert removal of stopwords
+    assert len(new_text) < len(list_text)
+
+    # Assert removal of custom stopwords
+    for word in custom_words:
+        assert word not in new_text
+    for stem, root in zip(custom_stem.keys(), custom_stem.values()):
+        assert stem not in new_text
+        assert root in new_text
+
+    # Assert that stemming occurred.
+    for word in lems_stems:
+        assert word not in new_text
+
+
+def test_get_domain_words(domain_kw_fp):
+    kwds = oum.get_domain_words(domain_kw_fp)
+    assert isinstance(kwds, list)
+
+
+def test_make_topic_str():
+    lda_list = [(0, '0.005*"aword1" + 0.005*"word2" + 0.005*"bword3" + 0.004*"word4" + 0.004*"cword5" + 0.004*"word6"'),
+                (1, '0.005*"word1" + 0.005*"word2" + 0.005*"word3" + 0.004*"word4" + 0.004*"word5" + 0.004*"word6"'),
+                (2, '0.005*"word1" + 0.005*"word2" + 0.005*"word3" + 0.004*"word4" + 0.004*"word5" + 0.004*"word6"')]
+
+    lda_str = oum.make_topic_str(lda_topics=lda_list)
+
+    assert 'topic' in lda_str.lower()
+    assert 'word' in lda_str.lower()

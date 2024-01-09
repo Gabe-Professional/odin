@@ -11,3 +11,5 @@ odin/collect/dist
 odin/collect/airtable_records.spec
 dist/
 */*/*/__pycache__
+test_results.log
+tests/collect/pg_tests.log
