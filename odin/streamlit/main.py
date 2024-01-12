@@ -50,11 +50,12 @@ def main():
                   f'Total: {len(data)}')
         plt.scatter(grp_df['date'], grp_df['count'])
         plt.xticks(rotation=45, ha='right')
-
+        # sl.line_chart(grp_df)
     plt.tight_layout()
     # sl.pyplot(fig)
     fig_html = mpld3.fig_to_html(fig=fig)
     components.html(fig_html, height=1500)
+
 
 
 if __name__ == '__main__':
